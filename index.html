@@ -1,0 +1,3917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学校多部门协同管理系统</title>
+<style>
+/* ============================================================
+   基础样式
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --primary:#2563eb; --primary-d:#1d4ed8; --warn:#f59e0b; --danger:#dc2626;
+  --success:#16a34a; --bg:#f4f6fb; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+}
+html,body{height:100%;}
+body{
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.6;
+}
+button{font-family:inherit;cursor:pointer;border:0;}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text);}
+.hidden{display:none !important;}
+.muted{color:var(--muted);}
+.overdue{color:var(--danger);font-weight:600;}
+
+/* ============================================================
+   登录页
+   ============================================================ */
+.login-page{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 45%,#38bdf8 100%);
+}
+.login-card{
+  width:100%;max-width:400px;background:#fff;border-radius:16px;padding:36px 30px 28px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);animation:pop .25s ease;
+}
+.login-logo{font-size:46px;text-align:center;line-height:1;}
+.login-card h1{font-size:20px;text-align:center;margin-top:10px;letter-spacing:1px;}
+.login-card .sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:22px;}
+.role-tabs{display:flex;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:18px;}
+.role-tab{
+  flex:1;background:transparent;padding:9px 0;border-radius:8px;color:var(--muted);
+  font-size:14px;transition:.2s;
+}
+.role-tab.active{background:#fff;color:var(--primary);font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.login-tip{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.9;}
+
+/* ============================================================
+   表单 & 按钮
+   ============================================================ */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;color:#374151;margin-bottom:6px;font-weight:500;}
+.field label i{color:var(--danger);font-style:normal;}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+  outline:none;transition:.2s;background:#fff;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+.field input[readonly]{background:#f8fafc;color:var(--muted);}
+.btn{
+  border-radius:8px;padding:9px 16px;font-size:14px;background:#e5e7eb;color:#374151;
+  transition:.18s;white-space:nowrap;display:inline-block;
+}
+.btn:hover{filter:brightness(.95);}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-warn{background:var(--warn);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-ghost{background:#f1f5f9;color:#475569;border:1px solid var(--border);}
+.btn-block{width:100%;padding:12px;font-size:16px;letter-spacing:4px;}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:6px;}
+.ops{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ============================================================
+   应用主框架
+   ============================================================ */
+.app{display:flex;height:100vh;overflow:hidden;}
+.sidebar{
+  width:220px;flex:0 0 220px;background:#0f172a;color:#cbd5e1;
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.brand{display:flex;gap:10px;align-items:center;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.brand span{font-size:26px;}
+.brand strong{display:block;color:#fff;font-size:15px;}
+.brand small{font-size:11px;color:#94a3b8;}
+#menu{padding:10px;display:flex;flex-direction:column;gap:4px;}
+.menu-item{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;
+  color:#cbd5e1;text-decoration:none;font-size:14px;transition:.2s;
+}
+.menu-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.menu-item.active{background:var(--primary);color:#fff;font-weight:600;}
+.menu-item .ic{font-size:16px;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{
+  height:60px;flex:0 0 60px;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 20px;
+}
+.topbar h2{font-size:17px;font-weight:600;flex:1;}
+.user-box{display:flex;align-items:center;gap:12px;}
+.user-meta{text-align:right;line-height:1.3;}
+.user-meta strong{display:block;font-size:14px;}
+.user-meta span{font-size:12px;color:var(--muted);}
+.icon-btn{display:none;background:transparent;font-size:20px;padding:6px 10px;border-radius:8px;}
+.icon-btn:hover{background:#f1f5f9;}
+.content{flex:1;overflow-y:auto;padding:20px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:880;}
+
+/* ============================================================
+   卡片 / 表格 / 徽章
+   ============================================================ */
+.card{
+  background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.06);
+  margin-bottom:18px;overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.card-head h3{font-size:15px;}
+.card-body{padding:16px 18px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:680px;}
+th,td{padding:11px 14px;text-align:left;font-size:13.5px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+th{background:#f8fafc;color:#475569;font-weight:600;white-space:nowrap;}
+tbody tr:hover{background:#f8fafc;}
+td{white-space:nowrap;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;line-height:1.7;}
+.badge-blue{background:#dbeafe;color:#1d4ed8;}
+.badge-orange{background:#ffedd5;color:#c2410c;}
+.badge-green{background:#dcfce7;color:#15803d;}
+.badge-red{background:#fee2e2;color:#b91c1c;}
+.badge-gray{background:#e5e7eb;color:#4b5563;}
+
+/* ============================================================
+   统计卡片 / 网格 / 进度条
+   ============================================================ */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:18px;}
+.stat-card{
+  background:#fff;border-radius:12px;padding:18px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 1px 3px rgba(15,23,42,.06);
+}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.stat-value{font-size:24px;font-weight:700;line-height:1.2;}
+.stat-label{font-size:13px;color:var(--muted);}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;}
+.progress{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden;min-width:110px;}
+.progress > i{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#22c55e);border-radius:999px;transition:width .4s;}
+.list-item{padding:12px 0;border-bottom:1px dashed var(--border);}
+.list-item:last-child{border-bottom:0;}
+.list-item .t{font-weight:600;font-size:14px;}
+.list-item .m{font-size:12.5px;color:var(--muted);margin-top:3px;word-break:break-all;white-space:normal;}
+.detail p{margin-bottom:7px;font-size:13.5px;word-break:break-all;white-space:normal;}
+.detail p b{color:#374151;}
+
+/* ============================================================
+   弹窗
+   ============================================================ */
+.modal-mask{
+  position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;
+  justify-content:center;z-index:1000;padding:16px;
+}
+.modal{
+  background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:90vh;
+  display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:pop .18s ease;
+}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-head h3{font-size:16px;}
+.modal-close{background:transparent;font-size:16px;color:var(--muted);border-radius:6px;padding:2px 8px;}
+.modal-close:hover{background:#f1f5f9;}
+.modal-body{padding:18px 20px;overflow-y:auto;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border);}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+#toastBox{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:2000;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;
+}
+.toast{
+  background:#111827;color:#fff;padding:10px 22px;border-radius:999px;font-size:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);animation:slideDown .25s ease;transition:.3s;
+  max-width:90vw;text-align:center;
+}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+.toast.warn{background:var(--warn);}
+.toast.out{opacity:0;transform:translateY(-10px);}
+@keyframes slideDown{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);}}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width:820px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:900;transform:translateX(-100%);transition:transform .25s;}
+  .sidebar.open{transform:translateX(0);}
+  .overlay.show{display:block;}
+  .icon-btn{display:block;}
+  .content{padding:14px;}
+  .user-meta{display:none;}
+  .topbar{padding:0 12px;}
+  .topbar h2{font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 登录页 ==================== -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="login-logo">🎓</div>
+    <h1>学校多部门协同管理系统</h1>
+    <p class="sub">School Multi-Department Collaboration System</p>
+
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="admin">辅导员 / 管理员</button>
+      <button class="role-tab" data-role="staff">部门人员 / 学生干部</button>
+    </div>
+
+    <div class="field">
+      <label>账号</label>
+      <input id="loginUser" placeholder="请输入账号" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="loginPass" type="password" placeholder="请输入密码">
+    </div>
+    <button class="btn btn-primary btn-block" id="loginBtn">登 录</button>
+    <div class="login-tip">
+      账号由管理员统一开通分配，如需使用请联系辅导员。<br>
+      <span id="loginStorageTip" class="muted" style="font-size:11px;">检测存储模式...</span>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn btn-sm btn-ghost" id="resetAllBtn" type="button" style="font-size:12px;">清除浏览器数据并重置</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 主应用 ==================== -->
+<div id="appPage" class="app hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span>🎓</span>
+      <div><strong>协同管理系统</strong><small>多部门协作平台</small></div>
+    </div>
+    <nav id="menu"></nav>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="menuToggle">☰</button>
+      <h2 id="pageTitle">仪表盘</h2>
+      <div class="user-box">
+        <div class="user-meta">
+          <strong id="uName">—</strong>
+          <span id="uRole">—</span>
+        </div>
+        <button class="btn btn-ghost" id="logoutBtn">退出</button>
+      </div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<!-- Toast 容器 -->
+<div id="toastBox"></div>
+
+<script>
+/* ================================================================
+ *  学校多部门协同管理系统 —— 原生 JS 单文件实现
+ *  数据存储：localStorage
+ * ================================================================ */
+
+/* ----------------------------------------------------------------
+ * 1. 常量与数据层
+ * ---------------------------------------------------------------- */
+const K = {
+  ver    : 'sms_data_version',
+  orgs   : 'sms_orgs',
+  dept   : 'sms_departments',
+  users  : 'sms_users',
+  tasks  : 'sms_tasks',
+  notices: 'sms_notices',
+  apps   : 'sms_applications',
+  logs   : 'sms_logs',
+  cur    : 'sms_current',
+  read   : 'sms_read'
+};
+
+/* 数据版本号：数值变更时，旧浏览器中的历史数据会自动重建为「初始空库」
+ * 版本 3 = 清空演示人员与业务数据（保留组织架构，仅保留 1 个管理员） */
+const DATA_VERSION = 3;
+
+/* -------------------- 存储抽象层（带内存降级） -------------------- */
+/* 解决浏览器 file:// / 隐身模式 / 安全策略禁用 localStorage 时整个应用崩溃的问题 */
+const Store = (function(){
+  const mem = {};           // 内存备份字典
+  let   mode = null;        // 'local' | 'memory'
+  let   checked = false;
+
+  function available(){
+    if (checked) return mode === 'local';
+    checked = true;
+    try {
+      const t = '__sms_probe__' + Date.now();
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      mode = 'local';
+    } catch(e){
+      mode = 'memory';
+    }
+    return mode === 'local';
+  }
+
+  return {
+    available: available,
+    mode: () => mode,
+    get(key, def){
+      if (available()){
+        try {
+          const v = localStorage.getItem(key);
+          if (v === null || v === undefined) return def;
+          return JSON.parse(v);
+        } catch(e){ /* 落到内存分支 */ }
+      }
+      return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : def;
+    },
+    set(key, val){
+      const str = JSON.stringify(val);
+      if (available()){
+        try { localStorage.setItem(key, str); return 'local'; }
+        catch(e){ /* 落到内存分支 */ }
+      }
+      mem[key] = val;
+      return 'memory';
+    },
+    remove(key){
+      if (available()){
+        try { localStorage.removeItem(key); return; }
+        catch(e){ /* 落到内存分支 */ }
+      }
+      delete mem[key];
+    },
+    /* 内存模式下的应急：把全部数据以 JSON 字符串形式塞进 cookie / dataURL 备用 */
+    snapshot(){
+      return JSON.stringify({
+        departments: mem.departments,
+        users: mem.users,
+        tasks: mem.tasks,
+        notices: mem.notices,
+        applications: mem.applications,
+        logs: mem.logs,
+        read: mem.read
+      });
+    }
+  };
+})();
+
+/* 全局初始化错误展示（万一 JS 抛错，页面也至少能给个提示） */
+window.addEventListener('error', function(ev){
+  try{
+    var box = document.getElementById('initErrorBox');
+    if (!box){
+      box = document.createElement('div');
+      box.id = 'initErrorBox';
+      box.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;background:#fee2e2;color:#7f1d1d;padding:12px 14px;border-radius:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.15);max-height:40vh;overflow:auto;';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = '<b>⚠️ 页面初始化出现错误</b><br>' +
+      (ev.message || '未知错误') +
+      (ev.filename ? '<br><span style="color:#991b1b;">' + ev.filename + ':' + ev.lineno + '</span>' : '');
+  }catch(_){}
+});
+
+/* 内存中的数据库 */
+const DB = {
+  organizations: [],
+  departments: [],
+  users: [],
+  tasks: [],
+  notices: [],
+  applications: [],
+  logs: []
+};
+
+let currentUser = null;   // 当前登录用户对象
+let modalEl = null;       // 当前弹窗 DOM
+let storageMode = null;   // 'local' / 'memory' —— 当前数据保存模式
+
+/* -------------------- 通用工具 -------------------- */
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function nowISO(){ return new Date().toISOString(); }
+
+/** HTML 转义，防止 XSS */
+function esc(s){
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/** 时间格式化 */
+function fmt(ts){
+  if(!ts) return '—';
+  const d = new Date(ts);
+  if(isNaN(d.getTime())) return String(ts);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** 把 Date 转成 datetime-local 需要的格式 */
+function toLocalInput(ts){
+  const d = new Date(ts);
+  if(isNaN(d.getTime())) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** 未来 N 天的时间（datetime-local 格式） */
+function futureDate(days, hour){
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  d.setHours(hour === undefined ? 18 : hour, 0, 0, 0);
+  return toLocalInput(d);
+}
+
+/** 安全读取数据（localStorage 不可用时自动降级到内存） */
+function loadKey(key, def){
+  return Store.get(key, def);
+}
+
+/* -------------------- 数据读写 -------------------- */
+function loadAll(){
+  DB.organizations = loadKey(K.orgs, []);
+  DB.departments  = loadKey(K.dept, []);
+  DB.users        = loadKey(K.users, []);
+  DB.tasks        = loadKey(K.tasks, []);
+  DB.notices      = loadKey(K.notices, []);
+  DB.applications = loadKey(K.apps, []);
+  DB.logs         = loadKey(K.logs, []);
+}
+function saveAll(){
+  const mode = Store.set(K.orgs,    DB.organizations);
+  Store.set(K.dept,    DB.departments);
+  Store.set(K.users,   DB.users);
+  Store.set(K.tasks,   DB.tasks);
+  Store.set(K.notices, DB.notices);
+  Store.set(K.apps,    DB.applications);
+  Store.set(K.logs,    DB.logs);
+  storageMode = mode;
+}
+
+/* -------------------- 完整演示数据（仅用于「恢复演示数据」按钮，非默认初始化） --------------------
+ * 默认初始化不再使用本函数，系统首次打开为「空库」状态：保留组织架构，只留 1 个管理员。 */
+function seedDemoData(){
+  const t = nowISO();
+
+  /* 一级：机构分类 */
+  DB.organizations = [
+    {id:'o1', name:'书院直属机构', desc:'书院党委与团委直属的学生组织', createdAt:t},
+    {id:'o2', name:'第一社区',     desc:'第一社区团委、学生会与学生服务中心', createdAt:t},
+    {id:'o3', name:'第二社区',     desc:'第二社区团委、学生会与学生服务中心', createdAt:t},
+    {id:'o4', name:'班级层面',     desc:'各班级团支部与班委会', createdAt:t}
+  ];
+
+  /* 二级：部门 / 组织 */
+  DB.departments = [
+    /* 书院直属机构 */
+    {id:'d_dwzx', orgId:'o1', name:'明德书院党委党务服务中心', desc:'对接书院党委，协调各党支部做好党务相关工作', leader:'李明轩', phone:'', createdAt:t},
+    {id:'d_xwzx', orgId:'o1', name:'书院大学生新闻中心',       desc:'统筹书院内外宣传、新闻采编、映像美学与新媒体运营', leader:'王雨桐', phone:'', createdAt:t},
+    {id:'d_xlb',  orgId:'o1', name:'小鹿帮帮忙新媒体运营中心', desc:'负责抖音账号「小鹿帮帮忙」整体建设、选题策划与内容产出', leader:'赵小鹿', phone:'', createdAt:t},
+    {id:'d_aizn', orgId:'o1', name:'明德书院党委AI智能服务中心', desc:'负责德宝智能体知识库建设、平台运维与交互研究', leader:'孙智涵', phone:'', createdAt:t},
+    {id:'d_yst',  orgId:'o1', name:'书院大学生艺术团',         desc:'统筹文艺演出、队伍训练与书院定期音乐会', leader:'周文悦', phone:'', createdAt:t},
+    {id:'d_tygt', orgId:'o1', name:'大学生体育工作委员会',     desc:'统筹书院体育工作、赛事组织与体育社团资源', leader:'吴宇豪', phone:'', createdAt:t},
+    {id:'d_xzlt', orgId:'o1', name:'校长助理团（文北）',       desc:'负责综合协调、后勤会务、调研与校区服务', leader:'郑一诺', phone:'', createdAt:t},
+    /* 第一社区 */
+    {id:'d_sq1tw', orgId:'o2', name:'第一社区团委',           desc:'负责社区团组织建设、团员发展与宣传思想工作', leader:'刘欣然', phone:'', createdAt:t},
+    {id:'d_sq1xh', orgId:'o2', name:'第一社区学生会',         desc:'负责社区学风建设、社会实践与文体活动', leader:'黄子涵', phone:'', createdAt:t},
+    {id:'d_sq1fw', orgId:'o2', name:'第一社区学生服务中心',   desc:'负责社区综合事务、安检卫检、资助与心理服务', leader:'徐梦琪', phone:'', createdAt:t},
+    /* 第二社区 */
+    {id:'d_sq2tw', orgId:'o3', name:'第二社区团委',           desc:'负责社区团组织建设、团员发展与宣传思想工作', leader:'何静怡', phone:'', createdAt:t},
+    {id:'d_sq2xh', orgId:'o3', name:'第二社区学生会',         desc:'负责社区学风建设、社会实践与文体活动', leader:'罗天佑', phone:'', createdAt:t},
+    {id:'d_sq2fw', orgId:'o3', name:'第二社区学生服务中心',   desc:'负责社区综合事务、安检卫检、资助与心理服务', leader:'谢天成', phone:'', createdAt:t},
+    /* 班级层面（本次招新未列岗位，作为后续补充） */
+    {id:'d_tzb',  orgId:'o4', name:'班级团支部',              desc:'团支书、组织委员、宣传委员等，负责班级团务工作', leader:'', phone:'', createdAt:t},
+    {id:'d_bwh',  orgId:'o4', name:'班委会',                  desc:'班长、副班长、学习委员、文体委员、生活委员等', leader:'', phone:'', createdAt:t}
+  ];
+
+  /* 人员：role=admin 管理员；role=staff + rank 三级（chief 正职 / deputy 副职 / member 干事） */
+  DB.users = [
+    {id:'u1', username:'admin', password:'123456', role:'admin', isSuper:true, rank:'', title:'超级管理员', name:'张辅导员', departmentId:'', phone:'13800000000', status:1, createdAt:t},
+
+    /* 书院直属机构 */
+    {id:'u_dw01', username:'dw01',  password:'123456', role:'staff', rank:'chief',  title:'中心主任',   name:'李明轩', departmentId:'d_dwzx', phone:'13800000001', status:1, createdAt:t},
+    {id:'u_xw01', username:'xw01',  password:'123456', role:'staff', rank:'chief',  title:'中心主任',   name:'王雨桐', departmentId:'d_xwzx', phone:'13800000002', status:1, createdAt:t},
+    {id:'u_xw02', username:'xw02',  password:'123456', role:'staff', rank:'chief',  title:'部长',       name:'陈佳怡', departmentId:'d_xwzx', phone:'13800000003', status:1, createdAt:t},
+    {id:'u_xw03', username:'xw03',  password:'123456', role:'staff', rank:'deputy', title:'副部长',     name:'许清和', departmentId:'d_xwzx', phone:'13800000004', status:1, createdAt:t},
+    {id:'u_xw04', username:'xw04',  password:'123456', role:'staff', rank:'member', title:'干事',       name:'沈知微', departmentId:'d_xwzx', phone:'13800000005', status:1, createdAt:t},
+    {id:'u_xlb01',username:'xlb01', password:'123456', role:'staff', rank:'chief',  title:'部长',       name:'赵小鹿', departmentId:'d_xlb',  phone:'13800000006', status:1, createdAt:t},
+    {id:'u_ai01', username:'ai01',  password:'123456', role:'staff', rank:'chief',  title:'中心主任',   name:'孙智涵', departmentId:'d_aizn', phone:'13800000007', status:1, createdAt:t},
+    {id:'u_ys01', username:'ys01',  password:'123456', role:'staff', rank:'chief',  title:'团长',       name:'周文悦', departmentId:'d_yst',  phone:'13800000008', status:1, createdAt:t},
+    {id:'u_ty01', username:'ty01',  password:'123456', role:'staff', rank:'chief',  title:'委员会主任', name:'吴宇豪', departmentId:'d_tygt', phone:'13800000009', status:1, createdAt:t},
+    {id:'u_xz01', username:'xz01',  password:'123456', role:'staff', rank:'chief',  title:'助理团主任', name:'郑一诺', departmentId:'d_xzlt', phone:'13800000010', status:1, createdAt:t},
+
+    /* 第一社区团委 */
+    {id:'u_q1a', username:'sq1tw01', password:'123456', role:'staff', rank:'chief',  title:'团委副书记', name:'刘欣然', departmentId:'d_sq1tw', phone:'13800000011', status:1, createdAt:t},
+    {id:'u_q1b', username:'sq1tw02', password:'123456', role:'staff', rank:'chief',  title:'组织部部长', name:'林嘉豪', departmentId:'d_sq1tw', phone:'13800000012', status:1, createdAt:t},
+    {id:'u_q1c', username:'sq1tw03', password:'123456', role:'staff', rank:'deputy', title:'组织部副部长', name:'苏晓萌', departmentId:'d_sq1tw', phone:'13800000013', status:1, createdAt:t},
+    {id:'u_q1d', username:'sq1tw04', password:'123456', role:'staff', rank:'member', title:'组织部干事', name:'高思远', departmentId:'d_sq1tw', phone:'13800000014', status:1, createdAt:t},
+    /* 第一社区学生会 / 服务中心 */
+    {id:'u_q1e', username:'sq1xh01', password:'123456', role:'staff', rank:'chief',  title:'学生会主席', name:'黄子涵', departmentId:'d_sq1xh', phone:'13800000015', status:1, createdAt:t},
+    {id:'u_q1f', username:'sq1fw01', password:'123456', role:'staff', rank:'chief',  title:'中心主席',   name:'徐梦琪', departmentId:'d_sq1fw', phone:'13800000016', status:1, createdAt:t},
+    /* 第二社区 */
+    {id:'u_q2a', username:'sq2tw01', password:'123456', role:'staff', rank:'chief',  title:'团委副书记', name:'何静怡', departmentId:'d_sq2tw', phone:'13800000017', status:1, createdAt:t},
+    {id:'u_q2b', username:'sq2tw02', password:'123456', role:'staff', rank:'member', title:'组织部干事', name:'梁子豪', departmentId:'d_sq2tw', phone:'13800000018', status:1, createdAt:t},
+    {id:'u_q2c', username:'sq2xh01', password:'123456', role:'staff', rank:'chief',  title:'学生会主席', name:'罗天佑', departmentId:'d_sq2xh', phone:'13800000019', status:1, createdAt:t},
+    {id:'u_q2d', username:'sq2fw01', password:'123456', role:'staff', rank:'chief',  title:'中心主席',   name:'谢天成', departmentId:'d_sq2fw', phone:'13800000020', status:1, createdAt:t}
+  ];
+
+  DB.tasks = [
+    {id:'t1', title:'整理本学期团员发展材料', content:'汇总各团支部团员发展材料，完成团籍注册与团费收缴台账核对。',
+     targetType:'dept', targetId:'d_sq1tw', priority:'高', deadline:futureDate(3, 18),
+     status:'doing', creatorId:'u1', createdAt:t, submitContent:'', reviewRemark:''},
+    {id:'t2', title:'组织主题团日活动', content:'按书院要求组织一次主题团日活动，并提交活动总结与照片。',
+     targetType:'dept', targetId:'d_sq1tw', priority:'中', deadline:futureDate(6, 18),
+     status:'pending', creatorId:'u1', createdAt:t, submitContent:'', reviewRemark:''},
+    {id:'t3', title:'提交本周部门工作周报', content:'请汇总本部门本周工作进展，形成周报提交。',
+     targetType:'user', targetId:'u_q1d', priority:'高', deadline:futureDate(1, 18),
+     status:'pending', creatorId:'u_q1a', createdAt:t, submitContent:'', reviewRemark:''},
+    {id:'t4', title:'统计团员花名册并核对信息', content:'核对第一社区全体团员基本信息，更新花名册。',
+     targetType:'user', targetId:'u_q1c', priority:'中', deadline:futureDate(4, 18),
+     status:'doing', creatorId:'u_q1a', createdAt:t, submitContent:'', reviewRemark:''},
+    {id:'t5', title:'迎新晚会宣传素材拍摄', content:'完成迎新晚会前期宣传素材拍摄与视频剪辑，供新媒体运营部推送。',
+     targetType:'dept', targetId:'d_xwzx', priority:'高', deadline:futureDate(2, 18),
+     status:'pending', creatorId:'u1', createdAt:t, submitContent:'', reviewRemark:''},
+    {id:'t6', title:'迎新晚会节目排练', content:'完成迎新晚会节目选定与集中排练，提交节目单。',
+     targetType:'dept', targetId:'d_yst', priority:'中', deadline:futureDate(5, 18),
+     status:'pending', creatorId:'u1', createdAt:t, submitContent:'', reviewRemark:''},
+    /* 已完成 —— 待正职/管理员审核 */
+    {id:'t7', title:'整理迎新志愿者名单', content:'统计并核对第一社区迎新志愿者名单，形成台账。',
+     targetType:'user', targetId:'u_q1d', priority:'中', deadline:futureDate(-2, 18),
+     status:'done', creatorId:'u_q1a', createdAt:t, submitterId:'u_q1d',
+     submitContent:'已完成名单整理，共 42 人，已提交至社区团委汇总。', reviewRemark:''},
+    /* 已审核通过 —— 用于统计报表完成率 */
+    {id:'t8', title:'社区团委档案归档', content:'整理归档社区团委本学期文件材料，形成档案目录。',
+     targetType:'dept', targetId:'d_sq1tw', priority:'低', deadline:futureDate(-1, 18),
+     status:'reviewed', creatorId:'u1', submitterId:'u_q1c', reviewerId:'u1',
+     submitContent:'已完成归档，共 6 卷，附档案目录一份。', reviewRemark:'归档规范，通过。'}
+  ];
+
+  DB.notices = [
+    {id:'n1', title:'关于开展 2026-2027 学年学生干部招新工作的通知',
+     content:'明德书院各学生组织招新工作现已启动，请有意向的同学按各组织报名方式提交报名材料，报名截止时间以各组织通知为准。请各组织负责人做好面试与录取工作。',
+     top:true,  creatorId:'u1', createdAt:t},
+    {id:'n2', title:'关于做好新学期宿舍安全排查工作的通知',
+     content:'各社区学生服务中心请于本周内完成宿舍安全排查，重点关注用电安全与消防隐患，排查结果报书院汇总。',
+     top:false, creatorId:'u1', createdAt:t}
+  ];
+
+  DB.applications = [
+    {id:'a1', userId:'u_q1d', type:'请假', reason:'因家中有事，需请假一天处理。',
+     startTime:futureDate(1, 8), endTime:futureDate(2, 18),
+     status:'pending', approverId:'', remark:'', createdAt:t},
+    {id:'a2', userId:'u_q1c', type:'物资申请', reason:'迎新晚会活动需要采购宣传物资一批。',
+     startTime:futureDate(2, 8), endTime:futureDate(2, 18),
+     status:'approved', approverId:'u1', remark:'同意，请按流程到后勤领取。', createdAt:t}
+  ];
+
+  DB.logs = [];
+  saveAll();
+  Store.set(K.read, {});
+  Store.set(K.ver, DATA_VERSION);
+}
+
+/* -------------------- 默认初始化：空库（保留组织架构，仅 1 个管理员） --------------------
+ * 组织架构（机构 + 15 个部门）按招新岗位一览表预先建好，
+ * 部门人员、任务、公告、申请、日志全部为空，由管理员登录后自行录入。 */
+function seedData(){
+  const t = nowISO();
+
+  /* 一级：机构分类（保留） */
+  DB.organizations = [
+    {id:'o1', name:'书院直属机构', desc:'书院党委与团委直属的学生组织', createdAt:t},
+    {id:'o2', name:'第一社区',     desc:'第一社区团委、学生会与学生服务中心', createdAt:t},
+    {id:'o3', name:'第二社区',     desc:'第二社区团委、学生会与学生服务中心', createdAt:t},
+    {id:'o4', name:'班级层面',     desc:'各班级团支部与班委会', createdAt:t}
+  ];
+
+  /* 二级：部门 / 组织（保留，负责人待管理员指派） */
+  DB.departments = [
+    /* 书院直属机构 */
+    {id:'d_dwzx', orgId:'o1', name:'明德书院党委党务服务中心',   desc:'对接书院党委，协调各党支部做好党务相关工作', leader:'', phone:'', createdAt:t},
+    {id:'d_xwzx', orgId:'o1', name:'书院大学生新闻中心',         desc:'统筹书院内外宣传、新闻采编、映像美学与新媒体运营', leader:'', phone:'', createdAt:t},
+    {id:'d_xlb',  orgId:'o1', name:'小鹿帮帮忙新媒体运营中心',   desc:'负责抖音账号「小鹿帮帮忙」整体建设、选题策划与内容产出', leader:'', phone:'', createdAt:t},
+    {id:'d_aizn', orgId:'o1', name:'明德书院党委AI智能服务中心', desc:'负责德宝智能体知识库建设、平台运维与交互研究', leader:'', phone:'', createdAt:t},
+    {id:'d_yst',  orgId:'o1', name:'书院大学生艺术团',           desc:'统筹文艺演出、队伍训练与书院定期音乐会', leader:'', phone:'', createdAt:t},
+    {id:'d_tygt', orgId:'o1', name:'大学生体育工作委员会',       desc:'统筹书院体育工作、赛事组织与体育社团资源', leader:'', phone:'', createdAt:t},
+    {id:'d_xzlt', orgId:'o1', name:'校长助理团（文北）',         desc:'负责综合协调、后勤会务、调研与校区服务', leader:'', phone:'', createdAt:t},
+    /* 第一社区 */
+    {id:'d_sq1tw', orgId:'o2', name:'第一社区团委',           desc:'负责社区团组织建设、团员发展与宣传思想工作', leader:'', phone:'', createdAt:t},
+    {id:'d_sq1xh', orgId:'o2', name:'第一社区学生会',         desc:'负责社区学风建设、社会实践与文体活动', leader:'', phone:'', createdAt:t},
+    {id:'d_sq1fw', orgId:'o2', name:'第一社区学生服务中心',   desc:'负责社区综合事务、安检卫检、资助与心理服务', leader:'', phone:'', createdAt:t},
+    /* 第二社区 */
+    {id:'d_sq2tw', orgId:'o3', name:'第二社区团委',           desc:'负责社区团组织建设、团员发展与宣传思想工作', leader:'', phone:'', createdAt:t},
+    {id:'d_sq2xh', orgId:'o3', name:'第二社区学生会',         desc:'负责社区学风建设、社会实践与文体活动', leader:'', phone:'', createdAt:t},
+    {id:'d_sq2fw', orgId:'o3', name:'第二社区学生服务中心',   desc:'负责社区综合事务、安检卫检、资助与心理服务', leader:'', phone:'', createdAt:t},
+    /* 班级层面 */
+    {id:'d_tzb',  orgId:'o4', name:'班级团支部',              desc:'团支书、组织委员、宣传委员等，负责班级团务工作', leader:'', phone:'', createdAt:t},
+    {id:'d_bwh',  orgId:'o4', name:'班委会',                  desc:'班长、副班长、学习委员、文体委员、生活委员等', leader:'', phone:'', createdAt:t}
+  ];
+
+  /* 人员：仅保留 1 个超级管理员，部门人员全部为空 */
+  DB.users = [
+    {id:'u1', username:'admin', password:'123456', role:'admin', isSuper:true, rank:'', title:'超级管理员', name:'张辅导员', departmentId:'', phone:'', status:1, createdAt:t}
+  ];
+
+  /* 业务数据全部清空 */
+  DB.tasks        = [];
+  DB.notices      = [];
+  DB.applications = [];
+  DB.logs         = [];
+
+  saveAll();
+  Store.set(K.read, {});
+  Store.set(K.ver, DATA_VERSION);
+}
+
+/* -------------------- 数据便捷读取 -------------------- */
+const getOrg     = id => DB.organizations.find(o => o.id === id);
+const getDept    = id => DB.departments.find(d => d.id === id);
+const getUser    = id => DB.users.find(u => u.id === id);
+const deptName   = id => { const d = getDept(id); return d ? d.name : '—'; };
+const userName   = id => { const u = getUser(id); return u ? u.name : '—'; };
+const orgName    = id => { const o = getOrg(id); return o ? o.name : '未分类'; };
+
+/* 部门所属机构名 */
+function deptOrgName(deptId){
+  const d = getDept(deptId);
+  return d ? orgName(d.orgId) : '—';
+}
+
+/* -------------------- 职级体系 -------------------- */
+/* chief 正职（主任/部长/团长/队长）· deputy 副职（副主任/副部长/副队长）· member 干事/队员 */
+const RANKS = {
+  chief : { label:'正职',      badge:'badge-blue',   short:'正' },
+  deputy: { label:'副职',      badge:'badge-orange', short:'副' },
+  member: { label:'干事/队员', badge:'badge-gray',   short:'员' }
+};
+function rankLabel(r){ return (RANKS[r] || RANKS.member).label; }
+function rankBadge(r){
+  const x = RANKS[r] || RANKS.member;
+  return `<span class="badge ${x.badge}">${x.label}</span>`;
+}
+/* 人员的完整称谓：姓名（岗位） */
+function userTitle(u){
+  if(!u) return '—';
+  if(u.role === 'admin') return '辅导员 / 管理员';
+  return u.title ? esc(u.title) : rankLabel(u.rank);
+}
+/* 是否可管理本部门（发布任务、查看部门进度、催办） */
+function canManageDept(u){
+  if(!u) return false;
+  return u.role === 'admin' || u.rank === 'chief';
+}
+
+/* -------------------- 超级管理员（最高管理员） --------------------
+ * 系统内最高权限：可一键批量导入人员、可授予/收回他人的超级管理员身份。
+ * 超级管理员账号不可被删除、不可被禁用。 */
+function isSuperAdmin(u){
+  return !!u && u.role === 'admin' && u.isSuper === true;
+}
+/* 超级管理员数量 */
+function superAdminCount(){
+  return DB.users.filter(u => u.role === 'admin' && u.isSuper === true).length;
+}
+/* 兼容旧数据：确保系统内至少存在一个超级管理员（不清空任何业务数据） */
+function ensureSuperAdmin(){
+  if(DB.users.some(u => u.role === 'admin' && u.isSuper === true)) return false;
+  const first = DB.users.find(u => u.role === 'admin');
+  if(first){ first.isSuper = true; return true; }
+  return false;
+}
+/* 是否可查看本部门整体进度（正职 + 副职） */
+function canViewDeptProgress(u){
+  if(!u) return false;
+  return u.role === 'admin' || u.rank === 'chief' || u.rank === 'deputy';
+}
+/* 我管理的部门列表（正职管理自己所在部门） */
+function myDept(){
+  if(!currentUser || !currentUser.departmentId) return null;
+  return getDept(currentUser.departmentId);
+}
+/* 本部门成员 */
+function deptMembers(deptId){
+  return DB.users.filter(u => u.departmentId === deptId);
+}
+/* 本部门任务（部门任务 + 该部门成员收到的个人任务） */
+function deptTasks(deptId){
+  return DB.tasks.filter(t => {
+    if(t.targetType === 'dept') return t.targetId === deptId;
+    const u = getUser(t.targetId);
+    return u && u.departmentId === deptId;
+  });
+}
+
+/* 公告排序：置顶优先，其次按时间倒序 */
+function noticeSort(a, b){
+  if(!!b.top !== !!a.top) return (b.top ? 1 : 0) - (a.top ? 1 : 0);
+  return new Date(b.createdAt) - new Date(a.createdAt);
+}
+
+/* 任务状态 / 优先级徽章 */
+const TASK_STATUS = { pending:'未开始', doing:'进行中', done:'已完成', reviewed:'已审核' };
+function statusBadge(s){
+  const map = { pending:'badge-gray', doing:'badge-blue', done:'badge-orange', reviewed:'badge-green' };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${TASK_STATUS[s] || esc(s)}</span>`;
+}
+function priorityBadge(p){
+  const map = { '高':'badge-red', '中':'badge-orange', '低':'badge-blue' };
+  return `<span class="badge ${map[p] || 'badge-gray'}">${esc(p)}</span>`;
+}
+function appStatusBadge(s){
+  const map = { pending:'badge-orange', approved:'badge-green', rejected:'badge-red' };
+  const txt = { pending:'待审批', approved:'已通过', rejected:'已驳回' };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${txt[s] || esc(s)}</span>`;
+}
+function targetText(t){
+  if(t.targetType === 'dept') return '部门：' + deptName(t.targetId);
+  const u = getUser(t.targetId);
+  return '人员：' + userName(t.targetId) + (u && u.title ? '（' + u.title + '）' : '');
+}
+function isOverdue(t){
+  return t.deadline && new Date(t.deadline) < new Date() && t.status !== 'done' && t.status !== 'reviewed';
+}
+
+/* 部门人员可见任务：发给本部门的 or 发给自己的 */
+function visibleTasks(u){
+  return DB.tasks.filter(t => {
+    if(t.targetType === 'user') return t.targetId === u.id;
+    return t.targetId === u.departmentId;
+  });
+}
+
+/* -------------------- 已读公告 -------------------- */
+function getReadMap(){ return loadKey(K.read, {}); }
+function markRead(userId, noticeId){
+  const m = getReadMap();
+  m[userId] = m[userId] || [];
+  if(!m[userId].includes(noticeId)){
+    m[userId].push(noticeId);
+    Store.set(K.read, m);
+  }
+}
+function unreadNotices(user){
+  const list = getReadMap()[user.id] || [];
+  return DB.notices.filter(n => !list.includes(n.id));
+}
+
+/* -------------------- 日志 -------------------- */
+function addLog(userId, action){
+  DB.logs.push({ id: uid('l'), userId, action, createdAt: nowISO() });
+  if(DB.logs.length > 300) DB.logs = DB.logs.slice(-300);
+  saveAll();
+}
+
+/* ----------------------------------------------------------------
+ * 2. Toast / Modal 通用组件
+ * ---------------------------------------------------------------- */
+function toast(msg, type){
+  const box = document.getElementById('toastBox');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type || 'success');
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 320);
+  }, 2200);
+}
+
+/**
+ * 打开弹窗
+ * @param {string} title 标题
+ * @param {string} bodyHTML 内容
+ * @param {function|null} onOk 点击确定回调，返回 false 则不关闭
+ * @param {string} okText 确定按钮文字
+ */
+function openModal(title, bodyHTML, onOk, okText){
+  closeModal();
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <h3>${esc(title)}</h3>
+        <button class="modal-close" type="button">✕</button>
+      </div>
+      <div class="modal-body">${bodyHTML}</div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost cancel" type="button">取消</button>
+        <button class="btn btn-primary ok" type="button">${esc(okText || '确定')}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+  modalEl = mask;
+
+  mask.querySelector('.modal-close').onclick = closeModal;
+  mask.querySelector('.cancel').onclick = closeModal;
+  mask.querySelector('.ok').onclick = function(){
+    if(onOk && onOk(mask) === false) return;
+    closeModal();
+  };
+  mask.addEventListener('click', e => { if(e.target === mask) closeModal(); });
+
+  const first = mask.querySelector('input,select,textarea');
+  if(first) setTimeout(() => first.focus(), 60);
+  return mask;
+}
+function closeModal(){
+  if(modalEl){ modalEl.remove(); modalEl = null; }
+}
+
+/** 二次确认弹窗 */
+function confirmModal(msg, onOk, okText){
+  openModal('操作确认', `<p style="padding:6px 0;">${esc(msg)}</p>`, () => { onOk(); }, okText || '确认删除');
+  const ok = modalEl.querySelector('.ok');
+  ok.className = 'btn btn-danger';
+}
+
+/* ----------------------------------------------------------------
+ * 3. 菜单与路由
+ * ---------------------------------------------------------------- */
+const ADMIN_MENU = [
+  { key:'dashboard',   icon:'📊', label:'仪表盘' },
+  { key:'org',         icon:'🏛️', label:'组织架构' },
+  { key:'users',       icon:'👥', label:'人员管理' },
+  { key:'import',      icon:'📥', label:'一键导入', superOnly:true },
+  { key:'tasks',       icon:'📋', label:'任务管理' },
+  { key:'notices',     icon:'📢', label:'通知公告' },
+  { key:'approvals',   icon:'✅', label:'审批中心' },
+  { key:'reports',     icon:'📈', label:'统计报表' },
+  { key:'logs',        icon:'📜', label:'操作日志' },
+  { key:'settings',    icon:'⚙️', label:'系统设置' }
+];
+/* 按当前用户过滤菜单：superOnly 项仅超级管理员可见 */
+function getMenuFor(u){
+  const base = (u && u.role === 'admin') ? ADMIN_MENU : getStaffMenu(u);
+  return base.filter(m => !m.superOnly || isSuperAdmin(u));
+}
+/* 部门人员菜单：按职级动态生成 */
+function getStaffMenu(u){
+  const isChief = u && u.rank === 'chief';
+  return [
+    { key:'mywork',    icon:'🏠', label:'我的工作台' },
+    { key:'mydept',    icon:'🏢', label: isChief ? '部门管理' : (u && u.rank === 'deputy' ? '部门概况' : '部门信息') },
+    { key:'mytasks',   icon:'📋', label:'任务中心' },
+    { key:'mynotices', icon:'📢', label:'通知公告' },
+    { key:'myapps',    icon:'📝', label:'我的申请' },
+    { key:'profile',   icon:'👤', label:'个人中心' }
+  ];
+}
+
+/** 路由分发 */
+function route(){
+  const raw = location.hash.replace(/^#\/?/, '');
+
+  /* 未登录 —— 强制回登录页 */
+  if(!currentUser){
+    if(raw !== 'login') history.replaceState(null, '', '#/login');
+    document.getElementById('appPage').classList.add('hidden');
+    document.getElementById('loginPage').classList.remove('hidden');
+    return;
+  }
+
+  const menu = getMenuFor(currentUser);
+  const allowed = menu.map(m => m.key);
+  const def = currentUser.role === 'admin' ? 'dashboard' : 'mywork';
+  let key = allowed.includes(raw) ? raw : def;
+
+  /* 越权访问：自动跳回自己的首页 */
+  if(key !== raw) history.replaceState(null, '', '#/' + key);
+
+  showApp(menu, key);
+}
+
+/** 渲染主框架 + 页面内容 */
+function showApp(menu, key){
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('appPage').classList.remove('hidden');
+
+  /* 侧边菜单 */
+  document.getElementById('menu').innerHTML = menu.map(m =>
+    `<a class="menu-item ${m.key === key ? 'active' : ''}" href="#/${m.key}">
+       <span class="ic">${m.icon}</span>${m.label}
+     </a>`).join('');
+
+  /* 顶部栏 */
+  const u = currentUser;
+  document.getElementById('uName').textContent = u.name;
+  document.getElementById('uRole').textContent =
+    u.role === 'admin'
+      ? (isSuperAdmin(u) ? '⭐ 超级管理员' : '辅导员 / 管理员')
+      : (deptName(u.departmentId) + ' · ' + (u.title || rankLabel(u.rank)));
+  document.getElementById('pageTitle').textContent =
+    (menu.find(m => m.key === key) || {}).label || '';
+
+  /* 内容区 */
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const render = PAGES[key];
+  if(render) render(content);
+  content.scrollTop = 0;
+
+  /* 关闭移动端侧栏 */
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/** 数据变更后刷新当前页面 */
+function refresh(){ route(); }
+
+/* ----------------------------------------------------------------
+ * 4. 页面渲染函数集合
+ * ---------------------------------------------------------------- */
+const PAGES = {
+  dashboard  : pageDashboard,
+  org        : pageOrg,
+  departments: pageOrg,
+  users      : pageUsers,
+  import     : pageImport,
+  tasks      : pageTasks,
+  notices    : pageNotices,
+  approvals  : pageApprovals,
+  reports    : pageReports,
+  logs       : pageLogs,
+  settings   : pageSettings,
+  mywork     : pageMyWork,
+  mydept     : pageMyDept,
+  mytasks    : pageMyTasks,
+  mynotices  : pageMyNotices,
+  myapps     : pageMyApps,
+  profile    : pageProfile
+};
+
+/* 统计卡片模板 */
+function statCard(icon, label, value, color){
+  return `<div class="stat-card">
+    <div class="stat-icon" style="background:${color}1a;color:${color}">${icon}</div>
+    <div><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>
+  </div>`;
+}
+
+/* ============================================================
+ * 4.1 管理员 —— 仪表盘
+ * ============================================================ */
+function pageDashboard(el){
+  const orgCount     = DB.organizations.length;
+  const deptCount    = DB.departments.length;
+  const userCount    = DB.users.length;
+  const taskCount    = DB.tasks.length;
+  const pendingCount = DB.applications.filter(a => a.status === 'pending').length;
+  const staffCount   = DB.users.filter(u => u.role === 'staff').length;
+
+  const notices = [...DB.notices].sort(noticeSort).slice(0, 4);
+  const tasks   = [...DB.tasks].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  const pendings = DB.applications.filter(a => a.status === 'pending').slice(0, 5);
+
+  /* 各机构人员概览 */
+  const orgOverview = DB.organizations.map(o => {
+    const depts = DB.departments.filter(d => d.orgId === o.id);
+    const cnt = DB.users.filter(u => { const d = getDept(u.departmentId); return d && d.orgId === o.id; }).length;
+    return { name: o.name, deptCnt: depts.length, cnt };
+  });
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      ${statCard('🏛️', '机构分类', orgCount, '#7c3aed')}
+      ${statCard('🏢', '部门 / 组织', deptCount, '#2563eb')}
+      ${statCard('👥', '学生干部', staffCount, '#0891b2')}
+      ${statCard('📋', '任务总数', taskCount, '#f59e0b')}
+      ${statCard('📝', '待审批数量', pendingCount, '#dc2626')}
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h3>机构人员概览</h3></div>
+        <div class="card-body">
+          ${ orgOverview.length ? orgOverview.map(r => `
+            <div class="list-item">
+              <div class="t">${esc(r.name)}</div>
+              <div class="m">下属部门 ${r.deptCnt} 个 · 干部 ${r.cnt} 人</div>
+            </div>`).join('') : '<p class="muted">暂无机构</p>' }
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>最近公告</h3></div>
+        <div class="card-body">
+          ${ notices.length ? notices.map(n => `
+            <div class="list-item">
+              <div class="t">${n.top ? '📌 ' : ''}${esc(n.title)}</div>
+              <div class="m">${fmt(n.createdAt)} · ${esc(userName(n.creatorId))}</div>
+            </div>`).join('') : '<p class="muted">暂无公告</p>' }
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h3>待办审批</h3></div>
+        <div class="card-body">
+          ${ pendings.length ? pendings.map(a => `
+            <div class="list-item">
+              <div class="t">${esc(a.type)} · ${esc(userName(a.userId))}</div>
+              <div class="m">${esc(a.reason)}<br>提交于 ${fmt(a.createdAt)}</div>
+            </div>`).join('') : '<p class="muted">暂无待审批事项</p>' }
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>各部门干部数量</h3></div>
+        <div class="card-body">
+          ${ deptCount ? DB.departments.slice(0, 6).map(d => {
+            const n = DB.users.filter(u => u.departmentId === d.id).length;
+            return `<div class="list-item">
+              <div class="t">${esc(d.name)}</div>
+              <div class="m">${esc(orgName(d.orgId))} · ${n} 人</div>
+            </div>`;
+          }).join('') : '<p class="muted">暂无部门</p>' }
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h3>最近任务</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>任务标题</th><th>目标</th><th>优先级</th><th>截止时间</th><th>状态</th></tr></thead>
+          <tbody>
+            ${ tasks.length ? tasks.map(t => `
+              <tr>
+                <td><strong>${esc(t.title)}</strong></td>
+                <td>${esc(targetText(t))}</td>
+                <td>${priorityBadge(t.priority)}</td>
+                <td class="${isOverdue(t) ? 'overdue' : ''}">${fmt(t.deadline)}</td>
+                <td>${statusBadge(t.status)}</td>
+              </tr>`).join('') : '<tr><td colspan="5" class="muted">暂无任务</td></tr>' }
+          </tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+/* ============================================================
+ * 4.2 管理员 —— 组织架构（机构分类 → 部门/组织 两级）
+ * ============================================================ */
+function pageOrg(el){
+  let filterOrg = 'all';
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      ${statCard('🏛️', '机构分类', DB.organizations.length, '#2563eb')}
+      ${statCard('🏢', '部门 / 组织', DB.departments.length, '#0891b2')}
+      ${statCard('👥', '在册人员', DB.users.length, '#f59e0b')}
+      ${statCard('🎖️', '学生干部', DB.users.filter(u => u.role === 'staff').length, '#16a34a')}
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>机构分类（一级）</h3>
+        <button class="btn btn-primary" id="addOrgBtn">＋ 新增机构</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>机构名称</th><th>说明</th><th>下属部门</th><th>人员数</th><th>操作</th></tr>
+          </thead>
+          <tbody id="orgBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>部门 / 组织（二级）</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <select id="orgFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+            <option value="all">全部机构</option>
+            ${DB.organizations.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('')}
+          </select>
+          <button class="btn btn-primary" id="addOrgDeptBtn">＋ 新增部门</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>部门 / 组织名称</th><th>所属机构</th><th>职责描述</th><th>负责人</th><th>成员数</th><th>岗位结构</th><th>操作</th></tr>
+          </thead>
+          <tbody id="deptBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  /* ---- 机构表 ---- */
+  function renderOrgRows(){
+    const body = $('#orgBody', el);
+    if(!DB.organizations.length){
+      body.innerHTML = '<tr><td colspan="5" class="muted">暂无机构分类，请点击右上角新增</td></tr>';
+      return;
+    }
+    body.innerHTML = DB.organizations.map(o => {
+      const depts   = DB.departments.filter(d => d.orgId === o.id);
+      const members = DB.users.filter(u => {
+        const d = getDept(u.departmentId);
+        return d && d.orgId === o.id;
+      }).length;
+      return `<tr>
+        <td><strong>${esc(o.name)}</strong></td>
+        <td class="muted" style="white-space:normal;max-width:300px;">${esc(o.desc || '—')}</td>
+        <td>${depts.length} 个</td>
+        <td>${members} 人</td>
+        <td>
+          <div class="ops">
+            <button class="btn btn-sm btn-warn" data-oedit="${o.id}">编辑</button>
+            <button class="btn btn-sm btn-danger" data-odel="${o.id}">删除</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-oedit]').forEach(b => b.onclick = () => openOrgModal(getOrg(b.dataset.oedit)));
+    body.querySelectorAll('[data-odel]').forEach(b => b.onclick = () => delOrg(b.dataset.odel));
+  }
+
+  /* ---- 部门表 ---- */
+  function renderDeptRows(){
+    const body = $('#deptBody', el);
+    const list = filterOrg === 'all' ? DB.departments : DB.departments.filter(d => d.orgId === filterOrg);
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="7" class="muted">暂无部门，请点击右上角新增</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(d => {
+      const members = DB.users.filter(u => u.departmentId === d.id);
+      const chief   = members.filter(u => u.rank === 'chief').length;
+      const deputy  = members.filter(u => u.rank === 'deputy').length;
+      const normal  = members.filter(u => u.rank === 'member').length;
+      return `<tr>
+        <td><strong>${esc(d.name)}</strong></td>
+        <td><span class="badge badge-blue">${esc(orgName(d.orgId))}</span></td>
+        <td class="muted" style="white-space:normal;max-width:260px;">${esc(d.desc || '—')}</td>
+        <td>${esc(d.leader || '—')}</td>
+        <td>${members.length}</td>
+        <td style="white-space:normal;">
+          <span class="badge badge-blue">正 ${chief}</span>
+          <span class="badge badge-orange">副 ${deputy}</span>
+          <span class="badge badge-gray">员 ${normal}</span>
+        </td>
+        <td>
+          <div class="ops">
+            <button class="btn btn-sm btn-warn" data-edit="${d.id}">编辑</button>
+            <button class="btn btn-sm btn-danger" data-del="${d.id}">删除</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openDeptModal(getDept(b.dataset.edit)));
+    body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delDept(b.dataset.del));
+  }
+
+  $('#addOrgBtn', el).onclick = () => openOrgModal(null);
+  $('#addOrgDeptBtn', el).onclick = () => openDeptModal(null);
+  $('#orgFilter', el).onchange = e => { filterOrg = e.target.value; renderDeptRows(); };
+
+  renderOrgRows();
+  renderDeptRows();
+}
+
+/** 机构新增 / 编辑弹窗 */
+function openOrgModal(o){
+  openModal(o ? '编辑机构' : '新增机构', `
+    <div class="field"><label>机构名称 <i>*</i></label>
+      <input id="o_name" value="${esc(o ? o.name : '')}" placeholder="如：第一社区"></div>
+    <div class="field"><label>机构说明</label>
+      <textarea id="o_desc" rows="3" placeholder="请输入机构说明">${esc(o ? o.desc : '')}</textarea></div>
+  `, () => {
+    const name = modalEl.querySelector('#o_name').value.trim();
+    const desc = modalEl.querySelector('#o_desc').value.trim();
+    if(!name){ toast('请填写机构名称', 'error'); return false; }
+    if(DB.organizations.some(x => x.name === name && (!o || x.id !== o.id))){
+      toast('机构名称已存在', 'error'); return false;
+    }
+    if(o){
+      Object.assign(o, { name, desc });
+      toast('机构已更新');
+      addLog(currentUser.id, '编辑机构：' + name);
+    }else{
+      DB.organizations.push({ id: uid('o'), name, desc, createdAt: nowISO() });
+      toast('机构添加成功');
+      addLog(currentUser.id, '新增机构：' + name);
+    }
+    saveAll();
+    refresh();
+  }, '保存');
+}
+
+/** 删除机构 */
+function delOrg(id){
+  const o = getOrg(id);
+  if(!o) return;
+  const depts = DB.departments.filter(d => d.orgId === id);
+  if(depts.length){
+    toast(`该机构下还有 ${depts.length} 个部门，请先删除或转移部门`, 'error');
+    return;
+  }
+  confirmModal(`确定要删除机构「${o.name}」吗？删除后不可恢复。`, () => {
+    DB.organizations = DB.organizations.filter(x => x.id !== id);
+    saveAll();
+    addLog(currentUser.id, '删除机构：' + o.name);
+    toast('机构已删除');
+    refresh();
+  });
+}
+
+/** 部门新增 / 编辑弹窗 */
+function openDeptModal(d){
+  openModal(d ? '编辑部门' : '新增部门', `
+    <div class="field"><label>所属机构 <i>*</i></label>
+      <select id="d_org">
+        ${DB.organizations.map(o => `<option value="${o.id}" ${d && d.orgId === o.id ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
+      </select></div>
+    <div class="field"><label>部门 / 组织名称 <i>*</i></label>
+      <input id="d_name" value="${esc(d ? d.name : '')}" placeholder="如：第一社区团委"></div>
+    <div class="field"><label>职责描述</label>
+      <textarea id="d_desc" rows="3" placeholder="请输入部门职责描述">${esc(d ? d.desc : '')}</textarea></div>
+    <div class="field"><label>负责人</label>
+      <input id="d_leader" value="${esc(d ? d.leader : '')}" placeholder="请输入负责人姓名"></div>
+    <div class="field"><label>联系电话</label>
+      <input id="d_phone" value="${esc(d ? d.phone : '')}" placeholder="请输入联系电话"></div>
+  `, () => {
+    const orgId  = modalEl.querySelector('#d_org').value;
+    const name   = modalEl.querySelector('#d_name').value.trim();
+    const desc   = modalEl.querySelector('#d_desc').value.trim();
+    const leader = modalEl.querySelector('#d_leader').value.trim();
+    const phone  = modalEl.querySelector('#d_phone').value.trim();
+
+    if(!orgId){ toast('请选择所属机构', 'error'); return false; }
+    if(!name){ toast('请填写部门名称', 'error'); return false; }
+    if(DB.departments.some(x => x.name === name && (!d || x.id !== d.id))){
+      toast('部门名称已存在', 'error'); return false;
+    }
+
+    if(d){
+      Object.assign(d, { orgId, name, desc, leader, phone });
+      toast('部门信息已更新');
+      addLog(currentUser.id, '编辑部门：' + name);
+    }else{
+      DB.departments.push({ id: uid('d'), orgId, name, desc, leader, phone, createdAt: nowISO() });
+      toast('部门添加成功');
+      addLog(currentUser.id, '新增部门：' + name);
+    }
+    saveAll();
+    refresh();
+  }, '保存');
+}
+
+/** 删除部门 */
+function delDept(id){
+  const d = getDept(id);
+  if(!d) return;
+  const members = DB.users.filter(u => u.departmentId === id).length;
+  if(members > 0){
+    toast(`该部门下还有 ${members} 名人员，请先转移人员后再删除`, 'error');
+    return;
+  }
+  confirmModal(`确定要删除部门「${d.name}」吗？删除后不可恢复。`, () => {
+    DB.departments = DB.departments.filter(x => x.id !== id);
+    saveAll();
+    addLog(currentUser.id, '删除部门：' + d.name);
+    toast('部门已删除');
+    refresh();
+  });
+}
+
+/* ============================================================
+ * 4.3 管理员 —— 人员管理
+ * ============================================================ */
+function pageUsers(el){
+  let filterOrg  = 'all';
+  let filterDept = 'all';
+  let filterRank = 'all';
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>人员列表（共 ${DB.users.length} 人）</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="orgFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+            <option value="all">全部机构</option>
+            ${DB.organizations.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('')}
+          </select>
+          <select id="deptFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+            <option value="all">全部部门</option>
+          </select>
+          <select id="rankFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+            <option value="all">全部职级</option>
+            <option value="chief">正职（主任/部长/团长）</option>
+            <option value="deputy">副职（副主任/副部长）</option>
+            <option value="member">干事 / 队员</option>
+            <option value="admin">管理员</option>
+          </select>
+          <button class="btn btn-primary" id="addUserBtn">＋ 新增人员</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>账号</th><th>姓名</th><th>岗位</th><th>职级</th><th>所属机构</th><th>所属部门</th><th>电话</th><th>状态</th><th>操作</th></tr>
+          </thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  const body = $('#userBody', el);
+  const deptSel = $('#deptFilter', el);
+
+  /* 机构 → 部门 联动筛选 */
+  function fillDeptOptions(){
+    const list = filterOrg === 'all' ? DB.departments : DB.departments.filter(d => d.orgId === filterOrg);
+    deptSel.innerHTML = '<option value="all">全部部门</option>' +
+      list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+    deptSel.value = 'all';
+    filterDept = 'all';
+  }
+
+  function renderRows(){
+    let list = DB.users;
+    if(filterOrg !== 'all'){
+      list = list.filter(u => { const d = getDept(u.departmentId); return d && d.orgId === filterOrg; });
+    }
+    if(filterDept !== 'all') list = list.filter(u => u.departmentId === filterDept);
+    if(filterRank !== 'all'){
+      list = filterRank === 'admin'
+        ? list.filter(u => u.role === 'admin')
+        : list.filter(u => u.role === 'staff' && u.rank === filterRank);
+    }
+
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="9" class="muted">暂无人员数据</td></tr>';
+      return;
+    }
+    const iAmSuper = isSuperAdmin(currentUser);
+    body.innerHTML = list.map(u => {
+      const sup = isSuperAdmin(u);
+      const canGrant = iAmSuper && u.role === 'admin' && u.id !== currentUser.id;
+      return `
+      <tr>
+        <td>${esc(u.username)}</td>
+        <td><strong>${esc(u.name)}</strong>${sup ? ' <span class="badge badge-orange">⭐ 超级管理员</span>' : ''}</td>
+        <td>${u.role === 'admin' ? (sup ? '系统最高管理员' : '辅导员') : esc(u.title || rankLabel(u.rank))}</td>
+        <td>${u.role === 'admin' ? '—' : rankBadge(u.rank)}</td>
+        <td>${u.role === 'admin' ? '—' : esc(deptOrgName(u.departmentId))}</td>
+        <td>${u.role === 'admin' ? '—' : esc(deptName(u.departmentId))}</td>
+        <td>${esc(u.phone || '—')}</td>
+        <td>${u.status === 1 ? '<span class="badge badge-green">启用</span>' : '<span class="badge badge-red">禁用</span>'}</td>
+        <td>
+          <div class="ops">
+            <button class="btn btn-sm btn-warn" data-edit="${u.id}">编辑</button>
+            <button class="btn btn-sm" data-reset="${u.id}">重置密码</button>
+            ${canGrant ? `<button class="btn btn-sm ${sup ? 'btn-ghost' : 'btn-success'}" data-super="${u.id}">${sup ? '取消超管' : '设为超管'}</button>` : ''}
+            ${sup ? '' : `<button class="btn btn-sm ${u.status === 1 ? 'btn-danger' : 'btn-success'}" data-toggle="${u.id}">${u.status === 1 ? '禁用' : '启用'}</button>`}
+            ${sup ? '' : `<button class="btn btn-sm btn-danger" data-del="${u.id}">删除</button>`}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openUserModal(getUser(b.dataset.edit)));
+    body.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => resetPwd(b.dataset.reset));
+    body.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => toggleUser(b.dataset.toggle));
+    body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delUser(b.dataset.del));
+    body.querySelectorAll('[data-super]').forEach(b => b.onclick = () => toggleSuper(b.dataset.super));
+  }
+
+  $('#orgFilter', el).onchange = e => { filterOrg = e.target.value; fillDeptOptions(); renderRows(); };
+  deptSel.onchange = e => { filterDept = e.target.value; renderRows(); };
+  $('#rankFilter', el).onchange = e => { filterRank = e.target.value; renderRows(); };
+  $('#addUserBtn', el).onclick = () => openUserModal(null);
+
+  fillDeptOptions();
+  renderRows();
+}
+
+/** 人员新增 / 编辑弹窗（支持机构 → 部门 → 职级 → 岗位 归类） */
+function openUserModal(u){
+  const isEdit = !!u;
+  const curOrg = u && u.departmentId ? (getDept(u.departmentId) || {}).orgId : (DB.organizations[0] || {}).id;
+
+  openModal(isEdit ? '编辑人员' : '新增人员', `
+    <div class="field"><label>账号 <i>*</i></label>
+      <input id="u_username" value="${esc(u ? u.username : '')}" ${isEdit ? 'readonly' : ''} placeholder="登录账号（建议用拼音缩写，如 sq1tw01）"></div>
+    ${isEdit ? '' : '<div class="field"><label>密码 <i>*</i></label><input id="u_password" value="123456" placeholder="登录密码"></div>'}
+    <div class="field"><label>姓名 <i>*</i></label>
+      <input id="u_name" value="${esc(u ? u.name : '')}" placeholder="真实姓名"></div>
+    <div class="field"><label>角色 <i>*</i></label>
+      <select id="u_role">
+        <option value="staff" ${u && u.role === 'staff' ? 'selected' : ''}>部门人员（学生干部）</option>
+        <option value="admin" ${u && u.role === 'admin' ? 'selected' : ''}>辅导员 / 管理员</option>
+      </select></div>
+    <div class="field"><label>所属机构 <i>*</i></label>
+      <select id="u_org">
+        ${DB.organizations.map(o => `<option value="${o.id}" ${curOrg === o.id ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
+      </select></div>
+    <div class="field"><label>所属部门 <i>*</i></label>
+      <select id="u_dept"></select></div>
+    <div class="field" id="u_rankWrap"><label>职级 <i>*</i></label>
+      <select id="u_rank">
+        <option value="chief"  ${u && u.rank === 'chief' ? 'selected' : ''}>正职（主任 / 部长 / 团长 / 队长）</option>
+        <option value="deputy" ${u && u.rank === 'deputy' ? 'selected' : ''}>副职（副主任 / 副部长 / 副队长）</option>
+        <option value="member" ${!u || u.rank === 'member' ? 'selected' : ''}>干事 / 队员</option>
+      </select></div>
+    <div class="field" id="u_titleWrap"><label>岗位名称</label>
+      <input id="u_title" value="${esc(u ? (u.title || '') : '')}" placeholder="如：组织部部长、团委副书记、干事"></div>
+    <div class="field"><label>电话</label>
+      <input id="u_phone" value="${esc(u ? u.phone : '')}" placeholder="联系电话"></div>
+    <div class="field"><label>状态</label>
+      <select id="u_status">
+        <option value="1" ${!u || u.status === 1 ? 'selected' : ''}>启用</option>
+        <option value="0" ${u && u.status === 0 ? 'selected' : ''}>禁用</option>
+      </select></div>
+  `, () => {
+    const username = modalEl.querySelector('#u_username').value.trim();
+    const name     = modalEl.querySelector('#u_name').value.trim();
+    const role     = modalEl.querySelector('#u_role').value;
+    const orgId    = modalEl.querySelector('#u_org').value;
+    const deptId   = modalEl.querySelector('#u_dept').value;
+    const rank     = modalEl.querySelector('#u_rank').value;
+    const title    = modalEl.querySelector('#u_title').value.trim();
+    const phone    = modalEl.querySelector('#u_phone').value.trim();
+    const status   = Number(modalEl.querySelector('#u_status').value);
+
+    if(!username){ toast('请填写账号', 'error'); return false; }
+    if(!name){ toast('请填写姓名', 'error'); return false; }
+    if(role === 'staff' && !deptId){ toast('部门人员必须选择所属部门', 'error'); return false; }
+
+    if(!isEdit){
+      const pwd = modalEl.querySelector('#u_password').value.trim();
+      if(!pwd){ toast('请填写密码', 'error'); return false; }
+      if(DB.users.some(x => x.username === username)){ toast('该账号已存在', 'error'); return false; }
+      DB.users.push({
+        id: uid('u'), username, password: pwd, role, name,
+        rank: role === 'admin' ? '' : rank,
+        title: role === 'admin' ? '辅导员' : title,
+        departmentId: role === 'admin' ? '' : deptId,
+        phone, status, createdAt: nowISO()
+      });
+      toast('人员添加成功：' + name + '（' + deptName(deptId) + ' · ' + rankLabel(rank) + '）');
+      addLog(currentUser.id, '新增人员：' + name + ' → ' + deptName(deptId));
+    }else{
+      if(u.id === currentUser.id && status === 0){
+        toast('不能禁用当前登录账号', 'error'); return false;
+      }
+      Object.assign(u, {
+        name, role,
+        rank: role === 'admin' ? '' : rank,
+        title: role === 'admin' ? '辅导员' : title,
+        departmentId: role === 'admin' ? '' : deptId,
+        phone, status
+      });
+      toast('人员信息已更新');
+      addLog(currentUser.id, '编辑人员：' + name);
+    }
+    saveAll();
+    refresh();
+  }, '保存');
+
+  /* 机构 → 部门联动 + 角色切换隐藏职级 */
+  const orgSel   = modalEl.querySelector('#u_org');
+  const deptS    = modalEl.querySelector('#u_dept');
+  const roleSel  = modalEl.querySelector('#u_role');
+  const rankWrap = modalEl.querySelector('#u_rankWrap');
+  const titleWrap= modalEl.querySelector('#u_titleWrap');
+
+  function fillDepts(){
+    const list = DB.departments.filter(d => d.orgId === orgSel.value);
+    deptS.innerHTML = list.length
+      ? list.map(d => `<option value="${d.id}" ${u && u.departmentId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')
+      : '<option value="">该机构下暂无部门</option>';
+  }
+  orgSel.onchange = fillDepts;
+  fillDepts();
+
+  function syncRole(){
+    const isStaff = roleSel.value === 'staff';
+    rankWrap.style.display  = isStaff ? 'block' : 'none';
+    titleWrap.style.display = isStaff ? 'block' : 'none';
+  }
+  roleSel.onchange = syncRole;
+  syncRole();
+}
+
+/** 重置密码 */
+function resetPwd(id){
+  const u = getUser(id);
+  if(!u) return;
+  confirmModal(`确定将「${u.name}」的密码重置为 123456 吗？`, () => {
+    u.password = '123456';
+    saveAll();
+    addLog(currentUser.id, '重置密码：' + u.name);
+    toast('密码已重置为 123456');
+  }, '确认重置');
+}
+
+/** 启用 / 禁用 */
+function toggleUser(id){
+  const u = getUser(id);
+  if(!u) return;
+  if(u.id === currentUser.id){ toast('不能操作当前登录账号', 'error'); return; }
+  if(isSuperAdmin(u)){ toast('超级管理员账号不可禁用，请先取消其超级管理员身份', 'error'); return; }
+  u.status = u.status === 1 ? 0 : 1;
+  saveAll();
+  addLog(currentUser.id, (u.status === 1 ? '启用' : '禁用') + '账号：' + u.name);
+  toast(u.status === 1 ? '已启用该账号' : '已禁用该账号');
+  refresh();
+}
+
+/** 删除人员 */
+function delUser(id){
+  const u = getUser(id);
+  if(!u) return;
+  if(u.id === currentUser.id){ toast('不能删除当前登录账号', 'error'); return; }
+  if(isSuperAdmin(u)){ toast('超级管理员账号不可删除，请先取消其超级管理员身份', 'error'); return; }
+  confirmModal(`确定删除人员「${u.name}（${u.username}）」吗？删除后不可恢复。`, () => {
+    DB.users = DB.users.filter(x => x.id !== id);
+    saveAll();
+    addLog(currentUser.id, '删除人员：' + u.name);
+    toast('人员已删除');
+    refresh();
+  });
+}
+
+/** 授予 / 取消超级管理员（仅超级管理员本人可操作） */
+function toggleSuper(id){
+  if(!isSuperAdmin(currentUser)){ toast('仅超级管理员可执行此操作', 'error'); return; }
+  const u = getUser(id);
+  if(!u || u.role !== 'admin'){ toast('该账号不是管理员', 'error'); return; }
+  if(u.id === currentUser.id){ toast('不能修改自己的超级管理员身份', 'error'); return; }
+  if(u.isSuper && superAdminCount() <= 1){ toast('系统至少需要保留 1 个超级管理员', 'error'); return; }
+
+  const toSuper = !u.isSuper;
+  confirmModal(
+    toSuper
+      ? `确定将「${u.name}」设为超级管理员吗？该账号将获得批量导入人员等最高权限。`
+      : `确定取消「${u.name}」的超级管理员身份吗？`,
+    () => {
+      u.isSuper = toSuper;
+      saveAll();
+      addLog(currentUser.id, (toSuper ? '授予超级管理员：' : '取消超级管理员：') + u.name);
+      toast(toSuper ? '已授予超级管理员权限' : '已取消超级管理员权限');
+      refresh();
+    }, toSuper ? '确认授予' : '确认取消');
+}
+
+/* ============================================================
+ * 4.4 管理员 —— 任务管理
+ * ============================================================ */
+function pageTasks(el){
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>任务列表（共 ${DB.tasks.length} 条）</h3>
+        <button class="btn btn-primary" id="addTaskBtn">＋ 发布任务</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>任务标题</th><th>目标</th><th>优先级</th><th>截止时间</th><th>状态</th><th>创建人</th><th>操作</th></tr>
+          </thead>
+          <tbody id="taskBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  renderTaskRows();
+  $('#addTaskBtn', el).onclick = () => openTaskModal(null);
+
+  function renderTaskRows(){
+    const body = $('#taskBody', el);
+    const list = [...DB.tasks].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="7" class="muted">暂无任务</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(t => `
+      <tr>
+        <td><strong>${esc(t.title)}</strong></td>
+        <td>${esc(targetText(t))}</td>
+        <td>${priorityBadge(t.priority)}</td>
+        <td class="${isOverdue(t) ? 'overdue' : ''}">${fmt(t.deadline)}</td>
+        <td>${statusBadge(t.status)}</td>
+        <td>${esc(userName(t.creatorId))}</td>
+        <td>
+          <div class="ops">
+            <button class="btn btn-sm btn-primary" data-view="${t.id}">查看</button>
+            ${t.status === 'done' ? `<button class="btn btn-sm btn-success" data-review="${t.id}">审核</button>` : ''}
+            <button class="btn btn-sm btn-warn" data-edit="${t.id}">编辑</button>
+            <button class="btn btn-sm btn-danger" data-del="${t.id}">删除</button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    body.querySelectorAll('[data-view]').forEach(b => b.onclick = () => viewTask(b.dataset.view));
+    body.querySelectorAll('[data-review]').forEach(b => b.onclick = () => viewTask(b.dataset.review));
+    body.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openTaskModal(DB.tasks.find(x => x.id === b.dataset.edit)));
+    body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delTask(b.dataset.del));
+  }
+}
+
+/** 任务新增 / 编辑弹窗 */
+function openTaskModal(t){
+  const isEdit = !!t;
+  openModal(isEdit ? '编辑任务' : '发布任务', `
+    <div class="field"><label>任务标题 <i>*</i></label>
+      <input id="t_title" value="${esc(t ? t.title : '')}" placeholder="请输入任务标题"></div>
+    <div class="field"><label>任务内容</label>
+      <textarea id="t_content" rows="3" placeholder="请输入任务详细内容">${esc(t ? t.content : '')}</textarea></div>
+    <div class="field"><label>目标类型 <i>*</i></label>
+      <select id="t_type">
+        <option value="dept" ${t && t.targetType === 'dept' ? 'selected' : ''}>发给某个部门</option>
+        <option value="user" ${t && t.targetType === 'user' ? 'selected' : ''}>发给某个人员</option>
+      </select></div>
+    <div class="field"><label>目标对象 <i>*</i></label>
+      <select id="t_target"></select></div>
+    <div class="field"><label>优先级</label>
+      <select id="t_priority">
+        ${['高','中','低'].map(p => `<option value="${p}" ${t && t.priority === p ? 'selected' : ''}>${p}</option>`).join('')}
+      </select></div>
+    <div class="field"><label>截止时间 <i>*</i></label>
+      <input type="datetime-local" id="t_deadline" value="${t && t.deadline ? toLocalInput(t.deadline) : ''}"></div>
+  `, () => {
+    const title     = modalEl.querySelector('#t_title').value.trim();
+    const content   = modalEl.querySelector('#t_content').value.trim();
+    const targetType= modalEl.querySelector('#t_type').value;
+    const targetId  = modalEl.querySelector('#t_target').value;
+    const priority  = modalEl.querySelector('#t_priority').value;
+    const deadline  = modalEl.querySelector('#t_deadline').value;
+
+    if(!title){ toast('请填写任务标题', 'error'); return false; }
+    if(!targetId){ toast('请选择目标对象', 'error'); return false; }
+    if(!deadline){ toast('请选择截止时间', 'error'); return false; }
+
+    if(isEdit){
+      Object.assign(t, { title, content, targetType, targetId, priority, deadline });
+      toast('任务已更新');
+      addLog(currentUser.id, '编辑任务：' + title);
+    }else{
+      DB.tasks.push({
+        id: uid('t'), title, content, targetType, targetId, priority, deadline,
+        status: 'pending', creatorId: currentUser.id, createdAt: nowISO(),
+        submitContent: '', reviewRemark: ''
+      });
+      toast('任务发布成功');
+      addLog(currentUser.id, '发布任务：' + title);
+    }
+    saveAll();
+    refresh();
+  }, '保存');
+
+  /* 目标对象联动 */
+  const typeSel   = modalEl.querySelector('#t_type');
+  const targetSel = modalEl.querySelector('#t_target');
+
+  function fillTargets(){
+    let html = '';
+    if(typeSel.value === 'dept'){
+      /* 按机构分组 */
+      const groups = DB.organizations.map(o => {
+        const ds = DB.departments.filter(d => d.orgId === o.id);
+        if(!ds.length) return '';
+        return `<optgroup label="${esc(o.name)}">${
+          ds.map(d => `<option value="${d.id}" ${t && t.targetId === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')
+        }</optgroup>`;
+      }).join('');
+      /* 未归类部门 */
+      const orphan = DB.departments.filter(d => !getOrg(d.orgId));
+      html = groups + (orphan.length
+        ? `<optgroup label="未归类">${orphan.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}</optgroup>`
+        : '');
+    }else{
+      /* 按机构 → 部门分组列出人员 */
+      const groups = DB.organizations.map(o => {
+        const ds = DB.departments.filter(d => d.orgId === o.id);
+        const us = DB.users.filter(u => u.status === 1 && ds.some(d => d.id === u.departmentId));
+        if(!us.length) return '';
+        return `<optgroup label="${esc(o.name)}">${
+          us.map(u => `<option value="${u.id}" ${t && t.targetId === u.id ? 'selected' : ''}>${esc(u.name)}（${esc(u.title || rankLabel(u.rank))} · ${esc(deptName(u.departmentId))}）</option>`).join('')
+        }</optgroup>`;
+      }).join('');
+      /* 管理员等无部门人员 */
+      const admins = DB.users.filter(u => u.status === 1 && !u.departmentId);
+      html = groups + (admins.length
+        ? `<optgroup label="书院管理人员">${admins.map(u => `<option value="${u.id}" ${t && t.targetId === u.id ? 'selected' : ''}>${esc(u.name)}（${esc(u.title || '管理员')}）</option>`).join('')}</optgroup>`
+        : '');
+    }
+    targetSel.innerHTML = html || '<option value="">暂无可选对象</option>';
+  }
+  typeSel.onchange = fillTargets;
+  fillTargets();
+}
+
+/** 查看 / 审核任务 */
+function viewTask(id){
+  const t = DB.tasks.find(x => x.id === id);
+  if(!t) return;
+
+  const body = `
+    <div class="detail">
+      <p><b>任务标题：</b>${esc(t.title)}</p>
+      <p><b>任务内容：</b>${esc(t.content || '—')}</p>
+      <p><b>目标对象：</b>${esc(targetText(t))}</p>
+      <p><b>优先级：</b>${esc(t.priority)}</p>
+      <p><b>截止时间：</b>${fmt(t.deadline)}</p>
+      <p><b>当前状态：</b>${statusBadge(t.status)}</p>
+      <p><b>创建人：</b>${esc(userName(t.creatorId))} · ${fmt(t.createdAt)}</p>
+      ${t.submitContent ? `<p><b>完成说明：</b>${esc(t.submitContent)}</p>` : ''}
+      ${t.reviewRemark ? `<p><b>审核意见：</b>${esc(t.reviewRemark)}</p>` : ''}
+    </div>
+    ${t.status === 'done' ? `<div class="field" style="margin-top:12px;"><label>审核意见</label>
+      <textarea id="rv_remark" rows="2" placeholder="可填写审核意见（选填）"></textarea></div>` : ''}`;
+
+  openModal('任务详情', body, null, '关闭');
+
+  const okBtn = modalEl.querySelector('.ok');
+  const cancelBtn = modalEl.querySelector('.cancel');
+
+  if(t.status === 'done'){
+    /* 通过 */
+    okBtn.className = 'btn btn-success';
+    okBtn.textContent = '审核通过';
+    okBtn.onclick = () => {
+      t.status = 'reviewed';
+      t.reviewRemark = (modalEl.querySelector('#rv_remark') || {}).value || '';
+      t.reviewerId = currentUser.id;
+      saveAll();
+      addLog(currentUser.id, '审核通过任务：' + t.title);
+      toast('任务已审核通过');
+      closeModal();
+      refresh();
+    };
+    /* 驳回 */
+    cancelBtn.className = 'btn btn-danger';
+    cancelBtn.textContent = '驳回';
+    cancelBtn.onclick = () => {
+      t.status = 'doing';
+      t.reviewRemark = (modalEl.querySelector('#rv_remark') || {}).value || '请重新修改完成说明后再次提交';
+      saveAll();
+      addLog(currentUser.id, '驳回任务：' + t.title);
+      toast('已驳回，任务退回「进行中」', 'warn');
+      closeModal();
+      refresh();
+    };
+  }else{
+    cancelBtn.style.display = 'none';
+    okBtn.onclick = closeModal;
+  }
+}
+
+/** 删除任务 */
+function delTask(id){
+  const t = DB.tasks.find(x => x.id === id);
+  if(!t) return;
+  confirmModal(`确定删除任务「${t.title}」吗？`, () => {
+    DB.tasks = DB.tasks.filter(x => x.id !== id);
+    saveAll();
+    addLog(currentUser.id, '删除任务：' + t.title);
+    toast('任务已删除');
+    refresh();
+  });
+}
+
+/* ============================================================
+ * 4.5 管理员 —— 通知公告
+ * ============================================================ */
+function pageNotices(el){
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>通知公告（共 ${DB.notices.length} 条）</h3>
+        <button class="btn btn-primary" id="addNoticeBtn">＋ 发布公告</button>
+      </div>
+      <div class="card-body" id="noticeList"></div>
+    </section>`;
+
+  renderList();
+  $('#addNoticeBtn', el).onclick = () => openNoticeModal(null);
+
+  function renderList(){
+    const box = $('#noticeList', el);
+    const list = [...DB.notices].sort(noticeSort);
+    if(!list.length){
+      box.innerHTML = '<p class="muted">暂无公告</p>';
+      return;
+    }
+    box.innerHTML = list.map(n => `
+      <div class="list-item">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div class="t">${n.top ? '📌 ' : ''}${esc(n.title)}</div>
+          <div class="ops">
+            <button class="btn btn-sm btn-warn" data-edit="${n.id}">编辑</button>
+            <button class="btn btn-sm btn-danger" data-del="${n.id}">删除</button>
+          </div>
+        </div>
+        <div class="m">${esc(n.content)}</div>
+        <div class="m">发布人：${esc(userName(n.creatorId))} · ${fmt(n.createdAt)}</div>
+      </div>`).join('');
+
+    box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openNoticeModal(DB.notices.find(x => x.id === b.dataset.edit)));
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => delNotice(b.dataset.del));
+  }
+}
+
+/** 公告新增 / 编辑 */
+function openNoticeModal(n){
+  openModal(n ? '编辑公告' : '发布公告', `
+    <div class="field"><label>公告标题 <i>*</i></label>
+      <input id="n_title" value="${esc(n ? n.title : '')}" placeholder="请输入公告标题"></div>
+    <div class="field"><label>公告内容 <i>*</i></label>
+      <textarea id="n_content" rows="5" placeholder="请输入公告内容">${esc(n ? n.content : '')}</textarea></div>
+    <div class="field">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="n_top" style="width:auto;" ${n && n.top ? 'checked' : ''}>
+        设为置顶公告（置顶公告排在列表最前面）
+      </label>
+    </div>
+  `, () => {
+    const title   = modalEl.querySelector('#n_title').value.trim();
+    const content = modalEl.querySelector('#n_content').value.trim();
+    const top     = modalEl.querySelector('#n_top').checked;
+
+    if(!title){ toast('请填写公告标题', 'error'); return false; }
+    if(!content){ toast('请填写公告内容', 'error'); return false; }
+
+    if(n){
+      Object.assign(n, { title, content, top });
+      toast('公告已更新');
+      addLog(currentUser.id, '编辑公告：' + title);
+    }else{
+      DB.notices.push({ id: uid('n'), title, content, top, creatorId: currentUser.id, createdAt: nowISO() });
+      toast('公告发布成功');
+      addLog(currentUser.id, '发布公告：' + title);
+    }
+    saveAll();
+    refresh();
+  }, '保存');
+}
+
+/** 删除公告 */
+function delNotice(id){
+  const n = DB.notices.find(x => x.id === id);
+  if(!n) return;
+  confirmModal(`确定删除公告「${n.title}」吗？`, () => {
+    DB.notices = DB.notices.filter(x => x.id !== id);
+    saveAll();
+    addLog(currentUser.id, '删除公告：' + n.title);
+    toast('公告已删除');
+    refresh();
+  });
+}
+
+/* ============================================================
+ * 4.6 管理员 —— 审批中心
+ * ============================================================ */
+function pageApprovals(el){
+  let filter = 'all';
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>审批中心</h3>
+        <select id="apFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+          <option value="all">全部状态</option>
+          <option value="pending">待审批</option>
+          <option value="approved">已通过</option>
+          <option value="rejected">已驳回</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>申请人</th><th>所属部门</th><th>类型</th><th>时间范围</th><th>申请理由</th><th>状态</th><th>提交时间</th><th>操作</th></tr>
+          </thead>
+          <tbody id="apBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  const body = $('#apBody', el);
+
+  function renderRows(){
+    const list = [...DB.applications]
+      .filter(a => filter === 'all' || a.status === filter)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="8" class="muted">暂无申请记录</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(a => {
+      const u = getUser(a.userId);
+      return `<tr>
+        <td><strong>${esc(u ? u.name : '已删除用户')}</strong>${u && u.title ? `<br><span class="muted" style="font-size:12px;">${esc(u.title)}</span>` : ''}</td>
+        <td>${esc(u ? deptName(u.departmentId) : '—')}</td>
+        <td>${esc(a.type)}</td>
+        <td>${fmt(a.startTime)} ~ ${fmt(a.endTime)}</td>
+        <td class="muted" style="white-space:normal;max-width:260px;">${esc(a.reason)}</td>
+        <td>${appStatusBadge(a.status)}</td>
+        <td class="muted">${fmt(a.createdAt)}</td>
+        <td>
+          <div class="ops">
+            ${a.status === 'pending'
+              ? `<button class="btn btn-sm btn-success" data-ok="${a.id}">审批</button>`
+              : `<button class="btn btn-sm btn-primary" data-view="${a.id}">查看</button>`}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => openApprovalModal(b.dataset.ok));
+    body.querySelectorAll('[data-view]').forEach(b => b.onclick = () => viewApproval(b.dataset.view));
+  }
+
+  $('#apFilter', el).onchange = e => { filter = e.target.value; renderRows(); };
+  renderRows();
+}
+
+/** 审批弹窗 */
+function openApprovalModal(id){
+  const a = DB.applications.find(x => x.id === id);
+  if(!a) return;
+  const u = getUser(a.userId);
+
+  openModal('审批处理', `
+    <div class="detail">
+      <p><b>申请人：</b>${esc(u ? u.name : '—')}（${esc(u ? deptName(u.departmentId) : '—')}）</p>
+      <p><b>申请类型：</b>${esc(a.type)}</p>
+      <p><b>开始时间：</b>${fmt(a.startTime)}</p>
+      <p><b>结束时间：</b>${fmt(a.endTime)}</p>
+      <p><b>申请理由：</b>${esc(a.reason)}</p>
+    </div>
+    <div class="field" style="margin-top:12px;"><label>审批意见</label>
+      <textarea id="ap_remark" rows="3" placeholder="请填写审批意见（选填）"></textarea></div>
+  `, null, '通过');
+
+  const okBtn = modalEl.querySelector('.ok');
+  const cancelBtn = modalEl.querySelector('.cancel');
+
+  okBtn.className = 'btn btn-success';
+  okBtn.textContent = '通 过';
+  okBtn.onclick = () => {
+    a.status = 'approved';
+    a.approverId = currentUser.id;
+    a.remark = modalEl.querySelector('#ap_remark').value.trim() || '同意';
+    saveAll();
+    addLog(currentUser.id, '审批通过：' + a.type);
+    toast('已通过该申请');
+    closeModal();
+    refresh();
+  };
+
+  cancelBtn.className = 'btn btn-danger';
+  cancelBtn.textContent = '驳 回';
+  cancelBtn.onclick = () => {
+    a.status = 'rejected';
+    a.approverId = currentUser.id;
+    a.remark = modalEl.querySelector('#ap_remark').value.trim() || '不符合相关规定，予以驳回';
+    saveAll();
+    addLog(currentUser.id, '驳回申请：' + a.type);
+    toast('已驳回该申请', 'warn');
+    closeModal();
+    refresh();
+  };
+}
+
+/** 查看已审批申请 */
+function viewApproval(id){
+  const a = DB.applications.find(x => x.id === id);
+  if(!a) return;
+  const u = getUser(a.userId);
+  openModal('申请详情', `
+    <div class="detail">
+      <p><b>申请人：</b>${esc(u ? u.name : '—')}</p>
+      <p><b>申请类型：</b>${esc(a.type)}</p>
+      <p><b>时间范围：</b>${fmt(a.startTime)} ~ ${fmt(a.endTime)}</p>
+      <p><b>申请理由：</b>${esc(a.reason)}</p>
+      <p><b>审批状态：</b>${appStatusBadge(a.status)}</p>
+      <p><b>审批人：</b>${esc(a.approverId ? userName(a.approverId) : '—')}</p>
+      <p><b>审批意见：</b>${esc(a.remark || '—')}</p>
+    </div>`, null, '关闭');
+  modalEl.querySelector('.cancel').style.display = 'none';
+  modalEl.querySelector('.ok').onclick = closeModal;
+}
+
+/* ============================================================
+ * 4.7 管理员 —— 统计报表
+ * ============================================================ */
+function pageReports(el){
+  /* 按机构统计 */
+  const orgRows = DB.organizations.map(o => {
+    const depts   = DB.departments.filter(d => d.orgId === o.id);
+    const members = DB.users.filter(u => { const d = getDept(u.departmentId); return d && d.orgId === o.id; });
+    const tasks   = DB.tasks.filter(t => {
+      if(t.targetType === 'dept'){ const d = getDept(t.targetId); return d && d.orgId === o.id; }
+      const u = getUser(t.targetId);
+      if(!u) return false;
+      const d = getDept(u.departmentId);
+      return d && d.orgId === o.id;
+    });
+    const done = tasks.filter(t => t.status === 'done' || t.status === 'reviewed').length;
+    return { o, deptCnt: depts.length, memberCnt: members.length,
+             chief: members.filter(u => u.rank === 'chief').length,
+             total: tasks.length, done,
+             rate: tasks.length ? Math.round(done / tasks.length * 100) : 0 };
+  });
+
+  /* 按部门统计任务（部门任务 + 该部门人员收到的任务） */
+  const rows = DB.departments.map(d => {
+    const members = DB.users.filter(u => u.departmentId === d.id).length;
+    const tasks = deptTasks(d.id);
+    const done = tasks.filter(t => t.status === 'done' || t.status === 'reviewed').length;
+    const rate = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+    return { d, members, total: tasks.length, done, rate };
+  });
+
+  const maxMembers = Math.max(1, ...rows.map(r => r.members));
+  const totalUsers = DB.users.length;
+  const totalTasks = DB.tasks.length;
+  const totalDone  = DB.tasks.filter(t => t.status === 'done' || t.status === 'reviewed').length;
+  const staffCnt   = DB.users.filter(u => u.role === 'staff').length;
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      ${statCard('🏛️', '机构数量', DB.organizations.length, '#7c3aed')}
+      ${statCard('🏢', '部门数量', DB.departments.length, '#2563eb')}
+      ${statCard('👥', '学生干部', staffCnt, '#0891b2')}
+      ${statCard('✅', '整体完成率', (totalTasks ? Math.round(totalDone / totalTasks * 100) : 0) + '%', '#16a34a')}
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h3>各机构学生干部与任务统计</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>机构名称</th><th>下属部门</th><th>干部人数</th><th>正职人数</th><th>任务总数</th><th>已完成</th><th>完成率</th></tr></thead>
+          <tbody>
+            ${ orgRows.map(r => `
+              <tr>
+                <td><strong>${esc(r.o.name)}</strong></td>
+                <td>${r.deptCnt} 个</td>
+                <td>${r.memberCnt} 人</td>
+                <td>${r.chief} 人</td>
+                <td>${r.total}</td>
+                <td>${r.done}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="progress" style="flex:1;max-width:200px;"><i style="width:${r.rate}%"></i></div>
+                    <span class="muted">${r.rate}%</span>
+                  </div>
+                </td>
+              </tr>`).join('') }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>各部门人员数量统计</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>所属机构</th><th>部门名称</th><th>人员数量</th><th>占比</th></tr></thead>
+          <tbody>
+            ${ rows.map(r => `
+              <tr>
+                <td><span class="badge badge-blue">${esc(orgName(r.d.orgId))}</span></td>
+                <td><strong>${esc(r.d.name)}</strong></td>
+                <td>${r.members} 人</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="progress" style="flex:1;max-width:260px;">
+                      <i style="width:${Math.round(r.members / maxMembers * 100)}%"></i>
+                    </div>
+                    <span class="muted">${Math.round(r.members / maxMembers * 100)}%</span>
+                  </div>
+                </td>
+              </tr>`).join('') }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>各部门任务数量与完成率</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>所属机构</th><th>部门名称</th><th>任务总数</th><th>已完成</th><th>完成率</th></tr></thead>
+          <tbody>
+            ${ rows.map(r => `
+              <tr>
+                <td><span class="badge badge-blue">${esc(orgName(r.d.orgId))}</span></td>
+                <td><strong>${esc(r.d.name)}</strong></td>
+                <td>${r.total}</td>
+                <td>${r.done}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="progress" style="flex:1;max-width:260px;"><i style="width:${r.rate}%"></i></div>
+                    <span class="muted">${r.rate}%</span>
+                  </div>
+                </td>
+              </tr>`).join('') }
+          </tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+/* ============================================================
+ * 4.7b 管理员 —— 操作日志
+ * ============================================================ */
+function pageLogs(el){
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>操作日志（最新 ${DB.logs.length} 条）</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <select id="logFilter" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+            <option value="all">全部用户</option>
+            ${DB.users.map(u => `<option value="${u.id}">${esc(u.name)}（${esc(u.username)}）</option>`).join('')}
+          </select>
+          <button class="btn btn-warn" id="clearLogBtn">清空日志</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th style="width:170px;">时间</th><th style="width:120px;">操作人</th><th>操作内容</th></tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  const body = $('#logBody', el);
+  function render(filter){
+    const list = [...DB.logs].reverse();
+    const filtered = filter === 'all' ? list : list.filter(l => l.userId === filter);
+    if(!filtered.length){
+      body.innerHTML = '<tr><td colspan="3" class="muted" style="text-align:center;padding:30px;">暂无操作日志</td></tr>';
+      return;
+    }
+    body.innerHTML = filtered.slice(0, 200).map(l => {
+      const u = getUser(l.userId);
+      return `<tr>
+        <td class="muted">${fmt(l.createdAt)}</td>
+        <td>${esc(u ? u.name : '已删除用户')}</td>
+        <td>${esc(l.action)}</td>
+      </tr>`;
+    }).join('');
+  }
+  render('all');
+
+  $('#logFilter', el).onchange = e => render(e.target.value);
+  $('#clearLogBtn', el).onclick = () => {
+    confirmModal('确定清空所有操作日志吗？此操作不可恢复。', () => {
+      DB.logs = [];
+      saveAll();
+      toast('日志已清空');
+      render('all');
+    }, '确认清空');
+  };
+}
+
+/* ============================================================
+ * 4.8 管理员 —— 系统设置
+ * ============================================================ */
+function pageSettings(el){
+  el.innerHTML = `
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h3>修改密码</h3></div>
+        <div class="card-body">
+          <div class="field"><label>原密码 <i>*</i></label><input type="password" id="pw_old" placeholder="请输入原密码"></div>
+          <div class="field"><label>新密码 <i>*</i></label><input type="password" id="pw_new" placeholder="请输入新密码"></div>
+          <div class="field"><label>确认新密码 <i>*</i></label><input type="password" id="pw_new2" placeholder="请再次输入新密码"></div>
+          <button class="btn btn-primary" id="changePwBtn">确认修改</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>数据管理</h3></div>
+        <div class="card-body">
+          <p class="muted" style="margin-bottom:14px;">
+            导出数据可用于备份；导入 JSON 会覆盖当前所有数据，请谨慎操作。
+          </p>
+          <p class="muted" id="storeModeTip" style="margin-bottom:14px;font-size:12.5px;">
+            当前存储模式：<b id="storeModeTxt">检测中...</b>
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-danger" id="clearBtn">清空人员与业务数据</button>
+            <button class="btn btn-warn" id="resetBtn">恢复完整演示数据</button>
+            <button class="btn btn-primary" id="exportBtn">导出数据 JSON</button>
+            <button class="btn btn-success" id="importBtn">导入 JSON 数据</button>
+            <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+          </div>
+          <p class="muted" style="margin-top:10px;font-size:12.5px;">
+            「清空人员与业务数据」会删除全部部门人员账号、任务、公告、申请与日志，<b>保留组织架构和当前登录的管理员账号</b>。
+          </p>
+          <p class="muted" style="margin-top:16px;font-size:12.5px;">
+            当前数据量：部门 ${DB.departments.length} 个 · 人员 ${DB.users.length} 人 ·
+            任务 ${DB.tasks.length} 条 · 公告 ${DB.notices.length} 条 · 申请 ${DB.applications.length} 条
+          </p>
+        </div>
+      </section>
+    </div>`;
+
+  /* 修改密码 */
+  $('#changePwBtn', el).onclick = () => {
+    const oldPw  = $('#pw_old', el).value.trim();
+    const newPw  = $('#pw_new', el).value.trim();
+    const newPw2 = $('#pw_new2', el).value.trim();
+
+    if(!oldPw || !newPw || !newPw2){ toast('请完整填写密码信息', 'error'); return; }
+    if(currentUser.password !== oldPw){ toast('原密码错误', 'error'); return; }
+    if(newPw.length < 6){ toast('新密码长度不能少于 6 位', 'error'); return; }
+    if(newPw !== newPw2){ toast('两次输入的新密码不一致', 'error'); return; }
+
+    currentUser.password = newPw;
+    saveAll();
+    addLog(currentUser.id, '修改密码');
+    toast('密码修改成功');
+    $('#pw_old', el).value = $('#pw_new', el).value = $('#pw_new2', el).value = '';
+  };
+
+  /* 清空人员与业务数据（保留组织架构 + 当前管理员） */
+  $('#clearBtn', el).onclick = () => {
+    const staffCount = DB.users.filter(u => u.role === 'staff').length;
+    confirmModal(
+      '确定清空所有部门人员与业务数据吗？将删除：部门人员账号 ' + staffCount + ' 个、任务 ' +
+      DB.tasks.length + ' 条、公告 ' + DB.notices.length + ' 条、申请 ' + DB.applications.length +
+      ' 条、全部操作日志。组织架构与当前管理员账号会保留，此操作不可撤销。',
+      () => {
+        DB.users        = [currentUser];
+        DB.tasks        = [];
+        DB.notices      = [];
+        DB.applications = [];
+        DB.logs         = [];
+        saveAll();
+        Store.set(K.read, {});
+        toast('已清空人员与业务数据，仅保留当前管理员');
+        refresh();
+      }, '确认清空');
+  };
+
+  /* 恢复完整演示数据（按招新岗位表，含演示人员与业务数据） */
+  $('#resetBtn', el).onclick = () => {
+    confirmModal('确定恢复完整演示数据吗？当前所有数据将被覆盖！', () => {
+      const id = currentUser.id;
+      seedDemoData();
+      loadAll();
+      currentUser = getUser(id) || getUser('u1');
+      if(currentUser) Store.set(K.cur, { id: currentUser.id });
+      toast('完整演示数据已恢复');
+      refresh();
+    }, '确认恢复');
+  };
+
+  /* 展示当前存储模式 */
+  const modeTxt = $('#storeModeTxt', el);
+  if (modeTxt){
+    modeTxt.textContent = storageMode === 'memory'
+      ? '⚠️ 内存模式（localStorage 不可用，数据仅在本次会话保留）'
+      : '✅ 本地存储（数据将保存在浏览器中）';
+    modeTxt.style.color = storageMode === 'memory' ? '#dc2626' : '#16a34a';
+  }
+
+  /* 导出 */
+  $('#exportBtn', el).onclick = () => {
+    const data = {
+      organizations: DB.organizations,
+      departments : DB.departments,
+      users       : DB.users,
+      tasks       : DB.tasks,
+      notices     : DB.notices,
+      applications: DB.applications,
+      logs        : DB.logs,
+      read        : loadKey(K.read, {}),
+      _meta: { version: 2, exportedAt: new Date().toISOString(), storageMode: storageMode }
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'school-collab-data-' + Date.now() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast('数据已导出（已包含已读状态等元数据）');
+  };
+
+  /* 导入 */
+  const fileInput = $('#importFile', el);
+  $('#importBtn', el).onclick = () => fileInput.click();
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data || typeof data !== 'object') throw new Error('数据格式不正确');
+        Store.set(K.orgs,    data.organizations || []);
+        Store.set(K.dept,    data.departments  || []);
+        Store.set(K.users,   data.users        || []);
+        Store.set(K.tasks,   data.tasks        || []);
+        Store.set(K.notices, data.notices      || []);
+        Store.set(K.apps,    data.applications || []);
+        Store.set(K.logs,    data.logs         || []);
+        if (data.read) Store.set(K.read, data.read);
+        loadAll();
+        /* 重新挂载会话 */
+        const u = getUser(currentUser.id);
+        if(u && u.status === 1){ currentUser = u; }
+        else { currentUser = null; Store.remove(K.cur); }
+        toast('数据导入成功');
+        refresh();
+      }catch(err){
+        toast('导入失败：' + (err.message || err), 'error');
+      }
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  };
+}
+
+/* ============================================================
+ * 4.9 部门人员 —— 我的工作台
+ * ============================================================ */
+function pageMyWork(el){
+  const u = currentUser;
+  const tasks = visibleTasks(u).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const todo = tasks.filter(t => t.status === 'pending' || t.status === 'doing');
+  const unread = unreadNotices(u).length;
+  const myApps = DB.applications.filter(a => a.userId === u.id);
+  const pendingApps = myApps.filter(a => a.status === 'pending').length;
+  const notices = [...DB.notices].sort(noticeSort).slice(0, 3);
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      ${statCard('📌', '我的待办任务', todo.length, '#f59e0b')}
+      ${statCard('📢', '未读公告', unread, '#dc2626')}
+      ${statCard('📝', '我的申请', myApps.length, '#2563eb')}
+      ${statCard('⏳', '待审批申请', pendingApps, '#0891b2')}
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h3>我的待办任务</h3></div>
+        <div class="card-body">
+          ${ todo.length ? todo.slice(0, 5).map(t => `
+            <div class="list-item">
+              <div class="t">${esc(t.title)}</div>
+              <div class="m">截止：${fmt(t.deadline)} · ${priorityBadge(t.priority)} ${statusBadge(t.status)}</div>
+            </div>`).join('') : '<p class="muted">暂无待办任务</p>' }
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>最新公告</h3></div>
+        <div class="card-body">
+          ${ notices.length ? notices.map(n => `
+            <div class="list-item">
+              <div class="t">${n.top ? '📌 ' : ''}${esc(n.title)}</div>
+              <div class="m">${fmt(n.createdAt)}</div>
+            </div>`).join('') : '<p class="muted">暂无公告</p>' }
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h3>我的申请状态</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>类型</th><th>时间范围</th><th>申请理由</th><th>状态</th><th>审批意见</th></tr></thead>
+          <tbody>
+            ${ myApps.length ? myApps.map(a => `
+              <tr>
+                <td>${esc(a.type)}</td>
+                <td>${fmt(a.startTime)} ~ ${fmt(a.endTime)}</td>
+                <td class="muted" style="white-space:normal;max-width:240px;">${esc(a.reason)}</td>
+                <td>${appStatusBadge(a.status)}</td>
+                <td class="muted">${esc(a.remark || '—')}</td>
+              </tr>`).join('') : '<tr><td colspan="5" class="muted">暂无申请记录</td></tr>' }
+          </tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+/* ============================================================
+ * 4.10 部门人员 —— 我的部门（按职级开放不同功能）
+ *   正职 chief ：部门管理 —— 成员管理 + 发布任务 + 任务进度 + 催办
+ *   副职 deputy：部门概况 —— 成员名单 + 任务进度（只读）
+ *   干事 member：部门信息 —— 部门基本资料 + 成员名单
+ * ============================================================ */
+function pageMyDept(el){
+  const u = currentUser;
+  const d = myDept();
+
+  if(!d){
+    el.innerHTML = `
+      <section class="card">
+        <div class="card-head"><h3>部门信息</h3></div>
+        <div class="card-body"><p class="muted">您暂未分配部门，请联系管理员。</p></div>
+      </section>`;
+    return;
+  }
+
+  const members  = deptMembers(d.id);
+  const tasks    = deptTasks(d.id);
+  const isChief  = u.rank === 'chief';
+  const showProg = canViewDeptProgress(u);
+
+  const todoCnt   = tasks.filter(t => t.status === 'pending' || t.status === 'doing').length;
+  const doneCnt   = tasks.filter(t => t.status === 'done').length;
+  const reviewCnt = tasks.filter(t => t.status === 'reviewed').length;
+  const rate      = tasks.length ? Math.round(tasks.filter(t => t.status === 'done' || t.status === 'reviewed').length / tasks.length * 100) : 0;
+
+  el.innerHTML = `
+    <div class="stat-grid">
+      ${statCard('👥', '部门成员', members.length, '#2563eb')}
+      ${statCard('📋', '部门任务', tasks.length, '#f59e0b')}
+      ${statCard('⏳', '进行中 / 待办', todoCnt, '#dc2626')}
+      ${statCard('✅', '完成率', rate + '%', '#16a34a')}
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>${isChief ? '本部门信息（负责人视图）' : '本部门信息'}</h3>
+        ${isChief ? '<button class="btn btn-primary" id="chiefAddTaskBtn">＋ 发布任务给本部门</button>' : ''}
+      </div>
+      <div class="card-body">
+        <div class="detail">
+          <p><b>所属机构：</b>${esc(orgName(d.orgId))}</p>
+          <p><b>部门名称：</b>${esc(d.name)}</p>
+          <p><b>我的岗位：</b>${esc(u.title || rankLabel(u.rank))} ${rankBadge(u.rank)}</p>
+          <p><b>部门负责人：</b>${esc(d.leader || '—')}</p>
+          <p><b>联系电话：</b>${esc(d.phone || '—')}</p>
+          <p><b>部门描述：</b>${esc(d.desc || '—')}</p>
+        </div>
+        ${!isChief && u.rank === 'member'
+          ? '<p class="muted" style="margin-top:12px;font-size:12.5px;">💡 干事/队员可查看本部门任务并更新自己的任务进度；任务发布与部门管理由正职负责。</p>'
+          : ''}
+        ${u.rank === 'deputy'
+          ? '<p class="muted" style="margin-top:12px;font-size:12.5px;">💡 副职可查看本部门成员与任务进度；如需调整任务请联系本部门正职或管理员。</p>'
+          : ''}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>部门成员（共 ${members.length} 人）</h3></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>姓名</th><th>账号</th><th>岗位</th><th>职级</th><th>电话</th><th>状态</th></tr></thead>
+          <tbody>
+            ${ members.length ? members.map(m => `
+              <tr>
+                <td><strong>${esc(m.name)}</strong></td>
+                <td>${esc(m.username)}</td>
+                <td>${esc(m.title || rankLabel(m.rank))}</td>
+                <td>${rankBadge(m.rank)}</td>
+                <td>${esc(m.phone || '—')}</td>
+                <td>${m.status === 1 ? '<span class="badge badge-green">启用</span>' : '<span class="badge badge-red">禁用</span>'}</td>
+              </tr>`).join('') : '<tr><td colspan="6" class="muted">暂无成员</td></tr>' }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    ${ showProg ? `
+    <section class="card">
+      <div class="card-head">
+        <h3>部门任务进度${isChief ? '（正职可催办）' : '（只读）'}</h3>
+        <span class="muted" style="font-size:12.5px;">已完成 ${doneCnt} · 待审核 ${reviewCnt} · 进行中/待办 ${todoCnt}</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>任务标题</th><th>承接人 / 对象</th><th>优先级</th><th>截止时间</th><th>状态</th><th>完成说明</th>${isChief ? '<th>操作</th>' : ''}</tr>
+          </thead>
+          <tbody>
+            ${ tasks.length ? [...tasks].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map(t => `
+              <tr>
+                <td><strong>${esc(t.title)}</strong></td>
+                <td>${esc(targetText(t))}</td>
+                <td>${priorityBadge(t.priority)}</td>
+                <td class="${isOverdue(t) ? 'overdue' : ''}">${fmt(t.deadline)}</td>
+                <td>${statusBadge(t.status)}</td>
+                <td class="muted" style="white-space:normal;max-width:220px;">${esc(t.submitContent || '—')}</td>
+                ${isChief ? `<td><div class="ops">
+                  <button class="btn btn-sm btn-primary" data-view="${t.id}">查看</button>
+                  ${t.status === 'done' ? `<button class="btn btn-sm btn-success" data-review="${t.id}">审核</button>` : ''}
+                  ${(t.status === 'pending' || t.status === 'doing')
+                    ? `<button class="btn btn-sm btn-warn" data-urge="${t.id}">催办</button>` : ''}
+                </div></td>` : ''}
+              </tr>`).join('') : `<tr><td colspan="${isChief ? 7 : 6}" class="muted">本部门暂无任务</td></tr>` }
+          </tbody>
+        </table>
+      </div>
+    </section>` : '' }`;
+
+  /* 正职：发布任务给本部门成员 */
+  if(isChief && $('#chiefAddTaskBtn', el)){
+    $('#chiefAddTaskBtn', el).onclick = () => openChiefTaskModal(d, members);
+  }
+
+  /* 正职：查看 / 审核 / 催办 */
+  if(isChief){
+    el.querySelectorAll('[data-view]').forEach(b => b.onclick = () => viewTask(b.dataset.view));
+    el.querySelectorAll('[data-review]').forEach(b => b.onclick = () => viewTask(b.dataset.review));
+    el.querySelectorAll('[data-urge]').forEach(b => b.onclick = () => urgeTask(b.dataset.urge));
+  }
+}
+
+/** 正职发布任务（对象限定为本部门成员） */
+function openChiefTaskModal(d, members){
+  const targets = members.filter(m => m.id !== currentUser.id);
+  if(!targets.length){
+    toast('本部门暂无可派发任务的其他成员', 'warn');
+    return;
+  }
+  openModal('发布任务给本部门', `
+    <div class="field"><label>任务标题 <i>*</i></label>
+      <input id="ct_title" placeholder="请输入任务标题"></div>
+    <div class="field"><label>任务内容</label>
+      <textarea id="ct_content" rows="3" placeholder="请输入任务详细内容"></textarea></div>
+    <div class="field"><label>派发给 <i>*</i></label>
+      <select id="ct_target">
+        ${targets.map(m => `<option value="${m.id}">${esc(m.name)}（${esc(m.title || rankLabel(m.rank))}）</option>`).join('')}
+      </select></div>
+    <div class="field"><label>优先级</label>
+      <select id="ct_priority">
+        <option value="高">高</option>
+        <option value="中" selected>中</option>
+        <option value="低">低</option>
+      </select></div>
+    <div class="field"><label>截止时间 <i>*</i></label>
+      <input type="datetime-local" id="ct_deadline" value="${futureDate(3, 18)}"></div>
+    <p class="muted" style="font-size:12.5px;">任务将由「${esc(currentUser.name)}」发布，成员完成后需经审核。</p>
+  `, () => {
+    const title    = modalEl.querySelector('#ct_title').value.trim();
+    const content  = modalEl.querySelector('#ct_content').value.trim();
+    const targetId = modalEl.querySelector('#ct_target').value;
+    const priority = modalEl.querySelector('#ct_priority').value;
+    const deadline = modalEl.querySelector('#ct_deadline').value;
+
+    if(!title){ toast('请填写任务标题', 'error'); return false; }
+    if(!targetId){ toast('请选择派发对象', 'error'); return false; }
+    if(!deadline){ toast('请选择截止时间', 'error'); return false; }
+
+    DB.tasks.push({
+      id: uid('t'), title, content, targetType:'user', targetId, priority, deadline,
+      status:'pending', creatorId: currentUser.id, createdAt: nowISO(),
+      submitContent:'', reviewRemark:''
+    });
+    saveAll();
+    addLog(currentUser.id, '（正职）发布任务：' + title + ' → ' + userName(targetId));
+    toast('任务已发布给 ' + userName(targetId));
+    refresh();
+  }, '发布任务');
+}
+
+/** 正职催办 */
+function urgeTask(id){
+  const t = DB.tasks.find(x => x.id === id);
+  if(!t) return;
+  confirmModal(`确定向「${targetText(t)}」发送催办提醒吗？`, () => {
+    addLog(currentUser.id, '催办任务：' + t.title);
+    toast('已发送催办提醒给 ' + targetText(t));
+  }, '确认催办');
+}
+
+/* ============================================================
+ * 4.11 部门人员 —— 任务中心
+ * ============================================================ */
+function pageMyTasks(el){
+  const list = visibleTasks(currentUser).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>任务中心（共 ${list.length} 条）</h3>
+        <span class="muted" style="font-size:12.5px;">仅显示发给本部门或本人的任务</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>任务标题</th><th>任务内容</th><th>来源</th><th>优先级</th><th>截止时间</th><th>状态</th><th>操作</th></tr>
+          </thead>
+          <tbody id="myTaskBody"></tbody>
+        </table>
+      </div>
+    </section>`;
+
+  const body = $('#myTaskBody', el);
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="7" class="muted">暂无任务</td></tr>';
+    return;
+  }
+
+  body.innerHTML = list.map(t => `
+    <tr>
+      <td><strong>${esc(t.title)}</strong></td>
+      <td class="muted" style="white-space:normal;max-width:260px;">${esc(t.content || '—')}</td>
+      <td>${esc(targetText(t))}</td>
+      <td>${priorityBadge(t.priority)}</td>
+      <td class="${isOverdue(t) ? 'overdue' : ''}">${fmt(t.deadline)}</td>
+      <td>${statusBadge(t.status)}</td>
+      <td>
+        <div class="ops">
+          ${ (t.status === 'pending' || t.status === 'doing' || t.status === 'done')
+              ? `<button class="btn btn-sm btn-primary" data-upd="${t.id}">更新状态</button>`
+              : '<span class="muted" style="font-size:12px;">已审核</span>' }
+        </div>
+      </td>
+    </tr>`).join('');
+
+  body.querySelectorAll('[data-upd]').forEach(b => b.onclick = () => openMyTaskModal(b.dataset.upd));
+}
+
+/** 部门人员更新任务状态 */
+function openMyTaskModal(id){
+  const t = DB.tasks.find(x => x.id === id);
+  if(!t) return;
+
+  openModal('更新任务状态', `
+    <div class="detail">
+      <p><b>任务标题：</b>${esc(t.title)}</p>
+      <p><b>任务内容：</b>${esc(t.content || '—')}</p>
+      <p><b>截止时间：</b>${fmt(t.deadline)}</p>
+    </div>
+    <div class="field" style="margin-top:12px;"><label>任务状态</label>
+      <select id="mt_status">
+        <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>未开始</option>
+        <option value="doing" ${t.status === 'doing' ? 'selected' : ''}>进行中</option>
+        <option value="done" ${t.status === 'done' ? 'selected' : ''}>已完成</option>
+      </select></div>
+    <div class="field" id="mt_submitWrap"><label>完成说明 <i>*</i></label>
+      <textarea id="mt_submit" rows="3" placeholder="请填写任务完成情况说明">${esc(t.submitContent || '')}</textarea></div>
+  `, () => {
+    const status = modalEl.querySelector('#mt_status').value;
+    const sub    = modalEl.querySelector('#mt_submit').value.trim();
+
+    if(status === 'done' && !sub){ toast('完成任务请填写完成说明', 'error'); return false; }
+
+    t.status = status;
+    if(status === 'done'){
+      t.submitContent = sub;
+      t.submitAt = nowISO();
+      t.submitterId = currentUser.id;
+      toast('任务已提交，等待管理员审核');
+    }else{
+      if(sub) t.submitContent = sub;
+      toast('任务状态已更新为「' + TASK_STATUS[status] + '」');
+    }
+    saveAll();
+    addLog(currentUser.id, '更新任务状态：' + t.title);
+    refresh();
+  }, '保存');
+
+  const sel  = modalEl.querySelector('#mt_status');
+  const wrap = modalEl.querySelector('#mt_submitWrap');
+  const toggle = () => { wrap.style.display = sel.value === 'done' ? 'block' : 'none'; };
+  sel.onchange = toggle;
+  toggle();
+}
+
+/* ============================================================
+ * 4.12 部门人员 —— 通知公告
+ * ============================================================ */
+function pageMyNotices(el){
+  const list = [...DB.notices].sort(noticeSort);
+  const readIds = getReadMap()[currentUser.id] || [];
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>通知公告</h3>
+        <span class="muted" style="font-size:12.5px;">未读 ${list.filter(n => !readIds.includes(n.id)).length} 条</span>
+      </div>
+      <div class="card-body" id="myNoticeList"></div>
+    </section>`;
+
+  const box = $('#myNoticeList', el);
+  if(!list.length){
+    box.innerHTML = '<p class="muted">暂无公告</p>';
+    return;
+  }
+
+  box.innerHTML = list.map(n => {
+    const isNew = !readIds.includes(n.id);
+    return `<div class="list-item">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="t">${n.top ? '📌 ' : ''}${esc(n.title)} ${isNew ? '<span class="badge badge-red">未读</span>' : ''}</div>
+        <button class="btn btn-sm btn-primary" data-read="${n.id}">查看</button>
+      </div>
+      <div class="m">${esc(n.content)}</div>
+      <div class="m">发布人：${esc(userName(n.creatorId))} · ${fmt(n.createdAt)}</div>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('[data-read]').forEach(b => {
+    b.onclick = () => {
+      const n = DB.notices.find(x => x.id === b.dataset.read);
+      if(!n) return;
+      openModal('公告详情', `
+        <h3 style="margin-bottom:12px;font-size:16px;">${esc(n.title)}</h3>
+        <p style="white-space:pre-wrap;">${esc(n.content)}</p>
+        <p class="muted" style="margin-top:14px;font-size:12.5px;">
+          发布人：${esc(userName(n.creatorId))} · ${fmt(n.createdAt)}
+        </p>`, null, '关闭');
+      modalEl.querySelector('.cancel').style.display = 'none';
+      modalEl.querySelector('.ok').onclick = () => {
+        markRead(currentUser.id, n.id);
+        closeModal();
+        refresh();
+      };
+    };
+  });
+}
+
+/* ============================================================
+ * 4.13 部门人员 —— 我的申请
+ * ============================================================ */
+function pageMyApps(el){
+  const list = DB.applications
+    .filter(a => a.userId === currentUser.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>我的申请（共 ${list.length} 条）</h3>
+        <button class="btn btn-primary" id="addAppBtn">＋ 提交申请</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>申请类型</th><th>开始时间</th><th>结束时间</th><th>申请理由</th><th>状态</th><th>审批意见</th><th>提交时间</th></tr>
+          </thead>
+          <tbody>
+            ${ list.length ? list.map(a => `
+              <tr>
+                <td><strong>${esc(a.type)}</strong></td>
+                <td>${fmt(a.startTime)}</td>
+                <td>${fmt(a.endTime)}</td>
+                <td class="muted" style="white-space:normal;max-width:240px;">${esc(a.reason)}</td>
+                <td>${appStatusBadge(a.status)}</td>
+                <td class="muted" style="white-space:normal;max-width:200px;">${esc(a.remark || '—')}</td>
+                <td class="muted">${fmt(a.createdAt)}</td>
+              </tr>`).join('') : '<tr><td colspan="7" class="muted">暂无申请记录</td></tr>' }
+          </tbody>
+        </table>
+      </div>
+    </section>`;
+
+  $('#addAppBtn', el).onclick = openAppModal;
+}
+
+/** 提交申请弹窗 */
+function openAppModal(){
+  openModal('提交申请', `
+    <div class="field"><label>申请类型 <i>*</i></label>
+      <select id="a_type">
+        <option value="请假">请假</option>
+        <option value="活动申请">活动申请</option>
+        <option value="物资申请">物资申请</option>
+      </select></div>
+    <div class="field"><label>开始时间 <i>*</i></label>
+      <input type="datetime-local" id="a_start"></div>
+    <div class="field"><label>结束时间 <i>*</i></label>
+      <input type="datetime-local" id="a_end"></div>
+    <div class="field"><label>申请理由 <i>*</i></label>
+      <textarea id="a_reason" rows="3" placeholder="请详细说明申请理由"></textarea></div>
+  `, () => {
+    const type   = modalEl.querySelector('#a_type').value;
+    const start  = modalEl.querySelector('#a_start').value;
+    const end    = modalEl.querySelector('#a_end').value;
+    const reason = modalEl.querySelector('#a_reason').value.trim();
+
+    if(!start){ toast('请选择开始时间', 'error'); return false; }
+    if(!end){ toast('请选择结束时间', 'error'); return false; }
+    if(!reason){ toast('请填写申请理由', 'error'); return false; }
+    if(new Date(end) < new Date(start)){ toast('结束时间不能早于开始时间', 'error'); return false; }
+
+    DB.applications.push({
+      id: uid('a'),
+      userId: currentUser.id,
+      type, reason,
+      startTime: start,
+      endTime: end,
+      status: 'pending',
+      approverId: '',
+      remark: '',
+      createdAt: nowISO()
+    });
+    saveAll();
+    addLog(currentUser.id, '提交申请：' + type);
+    toast('申请已提交，等待管理员审批');
+    refresh();
+  }, '提交申请');
+}
+
+/* ============================================================
+ * 4.14 部门人员 —— 个人中心
+ * ============================================================ */
+function pageProfile(el){
+  const u = currentUser;
+  const isAdmin = u.role === 'admin';
+
+  el.innerHTML = `
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h3>基本信息</h3></div>
+        <div class="card-body">
+          <div class="field"><label>账号</label><input value="${esc(u.username)}" readonly></div>
+          <div class="field"><label>所属机构</label><input value="${esc(isAdmin ? '书院（全局管理）' : (u.departmentId ? deptOrgName(u.departmentId) : '—'))}" readonly></div>
+          <div class="field"><label>所属部门</label><input value="${esc(isAdmin ? '—' : deptName(u.departmentId))}" readonly></div>
+          <div class="field"><label>岗位 / 职级</label><input value="${esc(isAdmin ? '辅导员 / 管理员' : ((u.title || rankLabel(u.rank)) + '（' + rankLabel(u.rank) + '）'))}" readonly></div>
+          <div class="field"><label>姓名 <i>*</i></label><input id="p_name" value="${esc(u.name)}"></div>
+          <div class="field"><label>电话</label><input id="p_phone" value="${esc(u.phone || '')}" placeholder="请输入联系电话"></div>
+          <button class="btn btn-primary" id="saveProfileBtn">保存修改</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>我的权限</h3></div>
+        <div class="card-body">
+          <div class="detail">
+            ${isAdmin ? `
+              <p><b>当前身份：</b><span class="badge badge-blue">辅导员 / 管理员</span></p>
+              <p><b>可执行操作：</b></p>
+              <p>· 管理机构分类与部门 / 组织<br>
+                 · 新增、编辑、停用部门人员并分配机构 / 部门 / 职级<br>
+                 · 发布任务并审核任务完成情况<br>
+                 · 审批请假、活动与物资申请<br>
+                 · 发布通知公告、查看统计报表与操作日志</p>
+            ` : `
+              <p><b>当前职级：</b>${rankBadge(u.rank)} ${esc(u.title || '')}</p>
+              <p><b>可执行操作：</b></p>
+              <p>${u.rank === 'chief'
+                ? '· 查看本部门成员与任务进度<br>· 向本部门成员发布任务<br>· 审核本部门任务完成情况<br>· 对未完成任务发起催办'
+                : (u.rank === 'deputy'
+                  ? '· 查看本部门成员名单<br>· 查看本部门任务进度（只读）<br>· 更新自己的任务状态'
+                  : '· 查看本部门信息与成员<br>· 查看并更新自己的任务状态<br>· 提交申请与查看公告')}</p>
+            `}
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>修改密码</h3></div>
+        <div class="card-body">
+          <div class="field"><label>原密码 <i>*</i></label><input type="password" id="p_old" placeholder="请输入原密码"></div>
+          <div class="field"><label>新密码 <i>*</i></label><input type="password" id="p_new" placeholder="请输入新密码"></div>
+          <div class="field"><label>确认新密码 <i>*</i></label><input type="password" id="p_new2" placeholder="请再次输入新密码"></div>
+          <button class="btn btn-warn" id="changePwBtn2">修改密码</button>
+        </div>
+      </section>
+    </div>`;
+
+  /* 保存基本信息 */
+  $('#saveProfileBtn', el).onclick = () => {
+    const name  = $('#p_name', el).value.trim();
+    const phone = $('#p_phone', el).value.trim();
+    if(!name){ toast('请填写姓名', 'error'); return; }
+    currentUser.name  = name;
+    currentUser.phone = phone;
+    saveAll();
+    addLog(currentUser.id, '修改个人信息');
+    toast('个人信息已保存');
+    refresh();
+  };
+
+  /* 修改密码 */
+  $('#changePwBtn2', el).onclick = () => {
+    const oldPw  = $('#p_old', el).value.trim();
+    const newPw  = $('#p_new', el).value.trim();
+    const newPw2 = $('#p_new2', el).value.trim();
+
+    if(!oldPw || !newPw || !newPw2){ toast('请完整填写密码信息', 'error'); return; }
+    if(currentUser.password !== oldPw){ toast('原密码错误', 'error'); return; }
+    if(newPw.length < 6){ toast('新密码长度不能少于 6 位', 'error'); return; }
+    if(newPw !== newPw2){ toast('两次输入的新密码不一致', 'error'); return; }
+
+    currentUser.password = newPw;
+    saveAll();
+    addLog(currentUser.id, '修改密码');
+    toast('密码修改成功');
+    $('#p_old', el).value = $('#p_new', el).value = $('#p_new2', el).value = '';
+  };
+}
+
+/* ----------------------------------------------------------------
+ * 5. 登录 / 登出 / 会话
+ * ---------------------------------------------------------------- */
+let loginRole = 'admin';
+
+function setSession(u){
+  currentUser = u;
+  if(u) Store.set(K.cur, { id: u.id });
+  else  Store.remove(K.cur);
+}
+
+function restoreSession(){
+  const s = loadKey(K.cur, null);
+  if(s && s.id){
+    const u = getUser(s.id);
+    if(u && u.status === 1){ currentUser = u; return; }
+  }
+  currentUser = null;
+  Store.remove(K.cur);
+}
+
+function doLogin(){
+  const username = $('#loginUser').value.trim();
+  const password = $('#loginPass').value.trim();
+
+  if(!username){ toast('请输入账号', 'error'); return; }
+  if(!password){ toast('请输入密码', 'error'); return; }
+
+  const u = DB.users.find(x => x.username === username);
+
+  if(!u || u.password !== password){ toast('账号或密码错误', 'error'); return; }
+  if(u.role !== loginRole){ toast('所选角色与账号不符，请重新选择角色', 'error'); return; }
+  if(u.status !== 1){ toast('该账号已被禁用，请联系管理员', 'error'); return; }
+
+  setSession(u);
+  addLog(u.id, '登录系统');
+  $('#loginPass').value = '';
+  toast('登录成功，欢迎 ' + u.name);
+
+  const target = '#/' + (u.role === 'admin' ? 'dashboard' : 'mywork');
+  if(location.hash === target) route();
+  else location.hash = target;
+}
+
+function doLogout(){
+  confirmModal('确定要退出登录吗？', () => {
+    addLog(currentUser.id, '退出登录');
+    setSession(null);
+    currentUser = null;
+    location.hash = '#/login';
+    route();
+    toast('已安全退出');
+  }, '确认退出');
+}
+
+/* ----------------------------------------------------------------
+ * 5.9 一键导入（超级管理员专属）
+ *     零依赖解析 Excel(.xlsx) / CSV → 批量建立部门人员账号
+ * ---------------------------------------------------------------- */
+
+/* ---------- 下载 / 编码工具 ---------- */
+function csvEscape(v){
+  const s = String(v === null || v === undefined ? '' : v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function toCSV(headers, rows){
+  return '\ufeff' + [headers.map(csvEscape).join(',')]
+    .concat(rows.map(r => r.map(csvEscape).join(','))).join('\r\n');
+}
+function downloadText(filename, text, mime){
+  const blob = new Blob([text], { type: (mime || 'text/csv') + ';charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => { try{ URL.revokeObjectURL(a.href); }catch(_){} }, 3000);
+}
+
+/* ---------- 5.9.1 ZIP 读取（xlsx 本质是 zip 包） ---------- */
+function u16le(b, o){ return (b[o] | (b[o+1] << 8)) >>> 0; }
+function u32le(b, o){ return (b[o] | (b[o+1] << 8) | (b[o+2] << 16) | (b[o+3] << 24)) >>> 0; }
+
+/** 解析 ZIP 中央目录，返回 { 条目名: { method, raw } } */
+function unzipEntries(buf){
+  let eocd = -1;
+  const limit = Math.max(0, buf.length - 22 - 65535);
+  for(let i = buf.length - 22; i >= limit; i--){
+    if(u32le(buf, i) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error('文件不是有效的 .xlsx（未找到 ZIP 结构），请确认未加密且未损坏');
+
+  const total = u16le(buf, eocd + 10);
+  let off = u32le(buf, eocd + 16);
+  const out = {};
+  for(let n = 0; n < total; n++){
+    if(off + 46 > buf.length || u32le(buf, off) !== 0x02014b50) break;
+    const method   = u16le(buf, off + 10);
+    const compSize = u32le(buf, off + 20);
+    const nameLen  = u16le(buf, off + 28);
+    const extraLen = u16le(buf, off + 30);
+    const cmtLen   = u16le(buf, off + 32);
+    const localOff = u32le(buf, off + 42);
+    const name = new TextDecoder('utf-8').decode(buf.subarray(off + 46, off + 46 + nameLen));
+    if(u32le(buf, localOff) === 0x04034b50){
+      const lNameLen  = u16le(buf, localOff + 26);
+      const lExtraLen = u16le(buf, localOff + 28);
+      const start = localOff + 30 + lNameLen + lExtraLen;
+      out[name] = { method, raw: buf.subarray(start, start + compSize) };
+    }
+    off += 46 + nameLen + extraLen + cmtLen;
+  }
+  return out;
+}
+
+/** raw deflate 解压（浏览器原生 DecompressionStream，无需第三方库） */
+async function inflateRaw(bytes){
+  if(typeof DecompressionStream === 'undefined'){
+    throw new Error('当前浏览器不支持解压 .xlsx，请在 Excel / WPS 中「另存为 CSV」后再导入，或改用新版 Chrome / Edge / Firefox / Safari');
+  }
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/* ---------- 5.9.2 XML 工具 ---------- */
+function xmlTags(node, tag){
+  if(!node) return [];
+  let list = node.getElementsByTagName(tag);
+  if(list && list.length) return Array.prototype.slice.call(list);
+  list = node.getElementsByTagNameNS('*', tag);
+  return list ? Array.prototype.slice.call(list) : [];
+}
+/** 单元格引用 → 列序号，如 C5 → 2 */
+function colIdx(ref){
+  const m = /^([A-Z]+)/.exec(String(ref || ''));
+  if(!m) return -1;
+  let n = 0;
+  for(let i = 0; i < m[1].length; i++) n = n * 26 + (m[1].charCodeAt(i) - 64);
+  return n - 1;
+}
+
+/* ---------- 5.9.3 读取 xlsx → [{name, rows}] ---------- */
+async function readXlsxSheets(file){
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const entries = unzipEntries(buf);
+  const readText = async name => {
+    const e = entries[name];
+    if(!e) return null;
+    if(e.method === 0) return new TextDecoder('utf-8').decode(e.raw);
+    if(e.method === 8) return new TextDecoder('utf-8').decode(await inflateRaw(e.raw));
+    throw new Error('不支持的压缩方式（' + e.method + '）');
+  };
+  const parser = new DOMParser();
+
+  /* 共享字符串表 */
+  let shared = [];
+  const ssXml = await readText('xl/sharedStrings.xml');
+  if(ssXml){
+    const doc = parser.parseFromString(ssXml, 'application/xml');
+    shared = xmlTags(doc, 'si').map(si => xmlTags(si, 't').map(t => t.textContent).join(''));
+  }
+
+  /* 工作表清单：名称 + 内部路径 */
+  let list = [];
+  const wbXml  = await readText('xl/workbook.xml');
+  const relXml = await readText('xl/_rels/workbook.xml.rels');
+  if(wbXml && relXml){
+    const wb   = parser.parseFromString(wbXml, 'application/xml');
+    const rels = parser.parseFromString(relXml, 'application/xml');
+    const rel  = {};
+    xmlTags(rels, 'Relationship').forEach(r => { rel[r.getAttribute('Id')] = r.getAttribute('Target'); });
+    xmlTags(wb, 'sheet').forEach((s, i) => {
+      const rid = s.getAttribute('r:id')
+        || s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id')
+        || ('rId' + (i + 1));
+      let t = String(rel[rid] || ('worksheets/sheet' + (i + 1) + '.xml')).replace(/^\/+/, '');
+      if(t.indexOf('xl/') !== 0) t = 'xl/' + t;
+      list.push({ name: s.getAttribute('name') || ('工作表' + (i + 1)), path: t });
+    });
+  }
+  if(!list.length){
+    list = Object.keys(entries)
+      .filter(k => /^xl\/worksheets\/sheet[^/]*\.xml$/.test(k))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((p, i) => ({ name: '工作表' + (i + 1), path: p }));
+  }
+
+  /* 逐个工作表解析单元格 */
+  const sheets = [];
+  for(const item of list){
+    const xml = await readText(item.path);
+    if(!xml) continue;
+    const doc = parser.parseFromString(xml, 'application/xml');
+    const tmp = [];
+    xmlTags(doc, 'row').forEach(rEl => {
+      const rNum = Number(rEl.getAttribute('r') || (tmp.length + 1));
+      const arr = [];
+      xmlTags(rEl, 'c').forEach(cEl => {
+        const i = colIdx(cEl.getAttribute('r'));
+        const t = cEl.getAttribute('t') || '';
+        let val = '';
+        if(t === 'inlineStr'){
+          val = xmlTags(cEl, 't').map(x => x.textContent).join('');
+        }else{
+          const vEl = xmlTags(cEl, 'v')[0];
+          const raw = vEl ? vEl.textContent : '';
+          if(t === 's'){
+            const k = Number(raw);
+            val = (shared[k] !== undefined) ? shared[k] : '';
+          }else if(t === 'b'){
+            val = raw === '1' ? '是' : '否';
+          }else{
+            val = raw;
+          }
+        }
+        arr[i < 0 ? arr.length : i] = String(val === null || val === undefined ? '' : val).trim();
+      });
+      tmp[rNum - 1] = arr;
+    });
+    const rows = [];
+    for(let i = 0; i < tmp.length; i++) rows.push(tmp[i] || []);
+    sheets.push({ name: item.name, rows: rows });
+  }
+  if(!sheets.length) throw new Error('未能解析出任何工作表，请确认文件内容');
+  return sheets;
+}
+
+/* ---------- 5.9.4 读取 CSV → [{name, rows}] ---------- */
+function readCsvSheets(text){
+  let t = String(text).replace(/^\ufeff/, '');
+  /* 分隔符自动识别：制表符 / 逗号 / 分号 / 中文逗号 */
+  const head = t.split(/\r?\n/).find(l => l.trim()) || '';
+  const cand = [
+    ['\t', (head.match(/\t/g) || []).length],
+    [',',  (head.match(/,/g)  || []).length],
+    [';',  (head.match(/;/g)  || []).length],
+    ['，', (head.match(/，/g)  || []).length]
+  ].sort((a, b) => b[1] - a[1]);
+  const delim = cand[0][1] > 0 ? cand[0][0] : ',';
+
+  const rows = [];
+  let row = [], cur = '', inQ = false;
+  for(let i = 0; i < t.length; i++){
+    const ch = t[i];
+    if(inQ){
+      if(ch === '"'){
+        if(t[i + 1] === '"'){ cur += '"'; i++; } else inQ = false;
+      }else cur += ch;
+    }else if(ch === '"'){ inQ = true; }
+    else if(ch === delim){ row.push(cur); cur = ''; }
+    else if(ch === '\n'){ row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if(ch === '\r'){ /* 忽略 */ }
+    else cur += ch;
+  }
+  if(cur !== '' || row.length){ row.push(cur); rows.push(row); }
+  const clean = rows
+    .map(r => r.map(c => String(c).trim()))
+    .filter(r => r.some(c => c !== ''));
+  return [{ name: 'CSV 数据', rows: clean }];
+}
+
+/* ---------- 5.9.5 表头识别与取值归一 ---------- */
+const IMPORT_FIELDS = [
+  { key:'org',      label:'机构', aliases:['机构','机构名称','机构分类','一级机构','所属机构','组织分类','单位'] },
+  { key:'dept',     label:'部门', aliases:['部门','部门名称','所属部门','二级部门','部门组织','中心'] },
+  { key:'name',     label:'姓名', aliases:['姓名','名字','人员姓名','学生姓名','成员姓名'] },
+  { key:'username', label:'账号', aliases:['账号','用户名','登录账号','登录名','学号','工号','账号名'] },
+  { key:'password', label:'密码', aliases:['密码','登录密码','初始密码','账号密码','口令'] },
+  { key:'rank',     label:'职级', aliases:['职级','级别','层级','干部层级','职务级别'] },
+  { key:'title',    label:'岗位', aliases:['岗位','职位','岗位名称','职务','岗位职务','担任职务'] },
+  { key:'phone',    label:'电话', aliases:['电话','手机','手机号','联系电话','联系方式','电话号码','手机号码'] },
+  { key:'status',   label:'状态', aliases:['状态','账号状态','是否启用','启用状态'] }
+];
+
+/** 表头归一化：全角转半角、去空格与标点、转小写 */
+function normHeader(s){
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/[\uff01-\uff5e]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[\s\u3000]/g, '')
+    .replace(/[（）()【】\[\]：:*＊/、,，.。·\-—]/g, '')
+    .toLowerCase();
+}
+/** 表头行 → 字段映射 { 字段key: 列序号 } */
+function mapHeaders(headerRow){
+  const map = {};
+  const norm = (headerRow || []).map(normHeader);
+  IMPORT_FIELDS.forEach(f => {
+    const cands = [f.label].concat(f.aliases).map(normHeader);
+    for(let i = 0; i < norm.length; i++){
+      if(norm[i] && cands.indexOf(norm[i]) >= 0){ map[f.key] = i; break; }
+    }
+  });
+  return map;
+}
+/** 职级归一：优先读「职级」列，其次从「岗位」文字推断 */
+function normRank(rankText, titleText){
+  const r = String(rankText || '').trim();
+  const t = String(titleText || '').trim();
+  if(/正职|chief/i.test(r))   return 'chief';
+  if(/副职|deputy/i.test(r))  return 'deputy';
+  if(/干事|队员|member|部员|工作人员|成员/i.test(r)) return 'member';
+  const s = r + ' ' + t;
+  if(!s.trim()) return 'member';
+  if(/副/.test(s)) return 'deputy';
+  if(/(部长|主任|团长|队长|主席|书记|会长|社长|站长|负责人)/.test(s)) return 'chief';
+  return 'member';
+}
+/** 状态归一 */
+function normStatus(v){
+  const s = String(v === null || v === undefined ? '' : v).trim();
+  if(!s) return 1;
+  if(/^(0|false|no|n)$/i.test(s)) return 0;
+  if(/禁用|停用|失效|离职|关闭|冻结|否/.test(s)) return 0;
+  return 1;
+}
+
+/* ---------- 5.9.6 逐行分析（表头定位 + 校验） ---------- */
+function analyzeSheet(sheets, sheetIdx, opts){
+  const sheet = sheets[sheetIdx];
+  if(!sheet) throw new Error('未选择工作表');
+
+  /* 去掉完全空行，同时保留原始行号 */
+  const lines = [];
+  sheet.rows.forEach((r, i) => {
+    if(r && r.some(c => String(c || '').trim() !== '')) lines.push({ cells: r, rowNo: i + 1 });
+  });
+  if(!lines.length) throw new Error('该工作表没有可用数据行');
+
+  /* 表头行：前 6 行里字段命中最多的那一行 */
+  let headRow = 0, headMap = {}, best = -1;
+  for(let i = 0; i < Math.min(lines.length, 6); i++){
+    const m = mapHeaders(lines[i].cells);
+    const score = ['name', 'username', 'dept', 'phone', 'password', 'rank', 'title'].filter(k => m[k] !== undefined).length;
+    if(score > best){ best = score; headRow = i; headMap = m; }
+  }
+  if(best < 2){
+    throw new Error('未能识别表头。请确认表格第一行包含「姓名、账号、部门」等列名，可先下载导入模板参考格式。');
+  }
+
+  const cols = {};
+  IMPORT_FIELDS.forEach(f => { cols[f.key] = headMap[f.key]; });
+
+  const existingByName = {};
+  DB.users.forEach(u => { existingByName[u.username] = u; });
+  const seenInFile = {};
+
+  const items = [];
+  for(let i = headRow + 1; i < lines.length; i++){
+    const { cells, rowNo } = lines[i];
+    const val = k => (cols[k] === undefined ? '' : String(cells[cols[k]] === undefined ? '' : cells[cols[k]]).trim());
+
+    const it = {
+      rowNo,
+      org: val('org'), deptName: val('dept'), name: val('name'),
+      username: val('username'), password: val('password'),
+      title: val('title'), phone: val('phone'),
+      status: opts.enableAll ? 1 : normStatus(val('status')),
+      deptId: '', act: 'new', msg: ''
+    };
+    it.rank = normRank(val('rank'), it.title);
+
+    /* 跳过小计行 / 说明行 */
+    if(/^(合计|小计|总计|备注|说明|注)$/.test(it.name)) continue;
+    if(!it.name && !it.username && !it.deptName) continue;
+
+    const errs = [];
+    if(!it.name)     errs.push('缺少姓名');
+    if(!it.username) errs.push('缺少账号');
+    if(!it.deptName) errs.push('缺少部门');
+
+    /* 部门定位 */
+    const dept = DB.departments.find(d => d.name === it.deptName);
+    if(dept){
+      it.deptId = dept.id;
+    }else if(!opts.autoCreate){
+      errs.push('部门不存在：' + it.deptName);
+    }else if(!it.org){
+      errs.push('部门「' + it.deptName + '」不存在，且「机构」列为空，无法自动创建');
+    }
+
+    /* 机构校验（部门为新建时才需要） */
+    if(!it.deptId && it.org && !DB.organizations.some(o => o.name === it.org) && !opts.autoCreate){
+      errs.push('机构不存在：' + it.org);
+    }
+
+    /* 账号重复 */
+    const exist = existingByName[it.username];
+    if(it.username){
+      if(seenInFile[it.username]){
+        errs.push('表格内账号重复');
+      }else if(exist){
+        if(isSuperAdmin(exist)){
+          errs.push('账号与超级管理员冲突，不能覆盖');
+        }else if(opts.dupPolicy === 'overwrite'){
+          it.act = 'update';
+        }else if(opts.dupPolicy === 'skip'){
+          it.act = 'skip';
+          it.msg = '账号已存在，将跳过';
+        }else{
+          errs.push('账号已存在');
+        }
+      }
+      seenInFile[it.username] = true;
+    }
+
+    if(errs.length){
+      it.act = 'error';
+      it.msg = errs.join('；');
+    }
+    items.push(it);
+  }
+
+  if(!items.length) throw new Error('表头下方没有可导入的数据行');
+
+  const stats = {
+    total : items.length,
+    new_  : items.filter(x => x.act === 'new').length,
+    update: items.filter(x => x.act === 'update').length,
+    skip  : items.filter(x => x.act === 'skip').length,
+    error : items.filter(x => x.act === 'error').length
+  };
+  return { items, stats, headerRowNo: lines[headRow].rowNo };
+}
+
+/* ---------- 5.9.7 执行导入 ---------- */
+function executeImport(items, opts){
+  const t = nowISO();
+  const stats = { orgCreated: 0, deptCreated: 0, inserted: 0, updated: 0, skipped: 0, failed: 0 };
+  const rows = items.slice();
+
+  /* 1) 补齐缺失机构 */
+  const orgOf = {};
+  DB.organizations.forEach(o => { orgOf[o.name] = o.id; });
+  rows.forEach(r => {
+    if(r.act !== 'new' && r.act !== 'update') return;
+    if(r.deptId || !r.org) return;
+    if(!orgOf[r.org]){
+      const id = uid('o');
+      DB.organizations.push({ id, name: r.org, desc: '批量导入自动创建', createdAt: t });
+      orgOf[r.org] = id;
+      stats.orgCreated++;
+    }
+  });
+
+  /* 2) 补齐缺失部门 */
+  const deptOf = {};
+  DB.departments.forEach(d => { deptOf[d.name] = d.id; });
+  rows.forEach(r => {
+    if(r.act !== 'new' && r.act !== 'update') return;
+    if(r.deptId) return;
+    if(!deptOf[r.deptName]){
+      if(!r.org || !orgOf[r.org]){
+        r.act = 'error';
+        r.msg = '部门不存在且无法确定所属机构：' + r.deptName;
+        return;
+      }
+      const id = uid('d');
+      DB.departments.push({
+        id, orgId: orgOf[r.org], name: r.deptName,
+        desc: '批量导入自动创建', leader: '', phone: '', createdAt: t
+      });
+      deptOf[r.deptName] = id;
+      stats.deptCreated++;
+    }
+    r.deptId = deptOf[r.deptName];
+    /* 表格里指定的机构与已有部门的归属不一致时，以表格为准 */
+    if(r.org && orgOf[r.org]){
+      const d = getDept(r.deptId);
+      if(d && d.orgId !== orgOf[r.org]) d.orgId = orgOf[r.org];
+    }
+  });
+
+  /* 3) 落库（人员） */
+  const seen = {};
+  rows.forEach(r => {
+    if(r.act === 'skip'){ stats.skipped++; return; }
+    if(r.act === 'error'){ stats.failed++; return; }
+    if(seen[r.username]){
+      r.act = 'error';
+      r.msg = '表格内账号重复：' + r.username;
+      stats.failed++;
+      return;
+    }
+    seen[r.username] = true;
+
+    const exist = DB.users.find(u => u.username === r.username);
+    if(exist){
+      if(r.act !== 'update'){ stats.skipped++; return; }
+      Object.assign(exist, {
+        name       : r.name,
+        password   : r.password || exist.password,
+        rank       : r.rank,
+        title      : r.title || rankLabel(r.rank),
+        departmentId: r.deptId,
+        phone      : r.phone || exist.phone || '',
+        status     : r.status
+      });
+      stats.updated++;
+    }else{
+      DB.users.push({
+        id: uid('u'), username: r.username,
+        password: r.password || opts.defaultPassword || '123456',
+        role: 'staff', rank: r.rank,
+        title: r.title || rankLabel(r.rank),
+        name: r.name, departmentId: r.deptId,
+        phone: r.phone || '', status: r.status, createdAt: t
+      });
+      stats.inserted++;
+    }
+  });
+
+  saveAll();
+  const failedRows = rows.filter(r => r.act === 'error');
+  addLog(currentUser.id, '批量导入人员：新增 ' + stats.inserted + ' 人，更新 ' + stats.updated +
+    ' 人，跳过 ' + stats.skipped + ' 人，失败 ' + stats.failed + ' 条');
+  return { stats, failedRows, createdAt: t };
+}
+
+/* ---------- 5.9.8 导入页面状态（跨刷新保留） ---------- */
+const IMPORT_OPTS_DEFAULT = { defaultPassword: '123456', dupPolicy: 'skip', autoCreate: true, enableAll: false };
+const IMPORT_CACHE = {
+  fileName : '',
+  sheets   : null,
+  sheetIdx : 0,
+  opts     : Object.assign({}, IMPORT_OPTS_DEFAULT),
+  lastResult: null
+};
+
+function pickDefaultSheet(sheets){
+  for(let i = 0; i < sheets.length; i++){
+    if(sheets[i].rows.some(r => r && r.some(c => String(c || '').trim() !== ''))) return i;
+  }
+  return 0;
+}
+
+/* ---------- 5.9.9 导入页 ---------- */
+function pageImport(el){
+  if(!isSuperAdmin(currentUser)){
+    el.innerHTML = `
+      <section class="card">
+        <div class="card-head"><h3>一键导入</h3></div>
+        <div class="card-body">
+          <p class="muted">该功能仅对<b>超级管理员</b>开放。如需使用，请联系超级管理员为你的账号授予权限。</p>
+        </div>
+      </section>`;
+    return;
+  }
+
+  const C = IMPORT_CACHE;
+
+  el.innerHTML = `
+    <section class="card">
+      <div class="card-head">
+        <h3>一键导入人员（Excel / CSV）</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-ghost" id="tplBtn">下载导入模板</button>
+          <button class="btn btn-sm btn-ghost" id="expBtn">导出当前人员</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="dropZone" style="border:2px dashed #cbd5e1;border-radius:12px;padding:26px 16px;text-align:center;cursor:pointer;background:#f8fafc;">
+          <div style="font-size:34px;line-height:1;">📄</div>
+          <p style="margin:10px 0 4px;font-weight:600;">点击选择文件，或把表格拖到这里</p>
+          <p class="muted" style="font-size:12.5px;margin:0;">支持 .xlsx 与 .csv；旧版 .xls 请先在 Excel 中「另存为」xlsx 或 csv</p>
+          <input type="file" id="fileInput" accept=".xlsx,.csv,.txt" class="hidden">
+        </div>
+        <div id="fileInfo" style="margin-top:12px;font-size:13px;"></div>
+        <p class="muted" style="margin-top:14px;font-size:12.5px;line-height:1.95;">
+          <b>必填列</b>：姓名、账号、部门 &nbsp;·&nbsp; <b>可选列</b>：机构、密码、职级、岗位、电话、状态<br>
+          列名支持常见写法（如「用户名 / 登录账号 / 学号」「手机 / 联系电话」「职位 / 职务」），系统自动识别，列的顺序随意。<br>
+          密码列留空时使用下方「默认密码」；职级留空时会根据岗位名称自动判断正职 / 副职 / 干事。
+        </p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>导入选项</h3></div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="field"><label>默认密码（表格密码列为空时使用）</label>
+            <input id="optPwd" value="${esc(C.opts.defaultPassword)}"></div>
+          <div class="field"><label>遇到已存在的账号</label>
+            <select id="optDup">
+              <option value="skip"      ${C.opts.dupPolicy === 'skip'      ? 'selected' : ''}>跳过（保留原账号信息）</option>
+              <option value="overwrite" ${C.opts.dupPolicy === 'overwrite' ? 'selected' : ''}>覆盖更新（用表格内容更新该账号）</option>
+              <option value="error"     ${C.opts.dupPolicy === 'error'     ? 'selected' : ''}>视为错误并列出</option>
+            </select></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:10px;cursor:pointer;">
+          <input type="checkbox" id="optAuto" ${C.opts.autoCreate ? 'checked' : ''} style="width:16px;height:16px;">
+          自动创建表格中出现的新机构与新部门
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;">
+          <input type="checkbox" id="optEnable" ${C.opts.enableAll ? 'checked' : ''} style="width:16px;height:16px;">
+          忽略表格「状态」列，导入后账号一律设为启用
+        </label>
+      </div>
+    </section>
+
+    <div id="previewBox"></div>
+    <div id="resultBox"></div>
+  `;
+
+  const dropZone  = $('#dropZone', el);
+  const fileInput = $('#fileInput', el);
+  const previewBox= $('#previewBox', el);
+  const resultBox = $('#resultBox', el);
+
+  /* ---- 选项绑定 ---- */
+  function readOpts(){
+    C.opts.defaultPassword = $('#optPwd', el).value.trim() || '123456';
+    C.opts.dupPolicy = $('#optDup', el).value;
+    C.opts.autoCreate = $('#optAuto', el).checked;
+    C.opts.enableAll  = $('#optEnable', el).checked;
+  }
+  ['#optPwd', '#optDup', '#optAuto', '#optEnable'].forEach(sel => {
+    const node = $(sel, el);
+    if(node) node.addEventListener('change', () => { readOpts(); renderPreview(); });
+  });
+
+  /* ---- 文件选择 ---- */
+  dropZone.onclick = () => fileInput.click();
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#2563eb';
+    dropZone.style.background  = '#eff6ff';
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = '#cbd5e1';
+    dropZone.style.background  = '#f8fafc';
+  });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#cbd5e1';
+    dropZone.style.background  = '#f8fafc';
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.onchange = () => {
+    if(fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  };
+
+  async function handleFile(file){
+    readOpts();
+    const name = file.name || '';
+    const ext  = (name.split('.').pop() || '').toLowerCase();
+    const info = $('#fileInfo', el);
+    info.innerHTML = '<span class="muted">正在解析 ' + esc(name) + ' …</span>';
+
+    try{
+      if(ext === 'xls'){
+        throw new Error('检测到旧版 .xls 格式。请在 Excel / WPS 中「另存为」.xlsx 或 CSV 后再导入。');
+      }
+      let sheets;
+      if(ext === 'csv' || ext === 'txt'){
+        sheets = readCsvSheets(await file.text());
+      }else{
+        const head = new Uint8Array((await file.slice(0, 8).arrayBuffer()));
+        const isOle = head[0] === 0xD0 && head[1] === 0xCF && head[2] === 0x11 && head[3] === 0xE0;
+        const isZip = head[0] === 0x50 && head[1] === 0x4B;
+        if(isOle) throw new Error('检测到旧版 .xls 格式。请另存为 .xlsx 或 CSV 后再导入。');
+        if(!isZip) throw new Error('文件格式无法识别，请上传 .xlsx 或 .csv 文件。');
+        sheets = await readXlsxSheets(file);
+      }
+      C.fileName = name;
+      C.sheets   = sheets;
+      C.sheetIdx = pickDefaultSheet(sheets);
+      C.lastResult = null;
+      info.innerHTML = '<span style="color:#16a34a;">✅ 已解析：' + esc(name) + '（共 ' + sheets.length +
+        ' 个工作表，当前使用「' + esc(sheets[C.sheetIdx].name) + '」）</span>';
+      renderPreview();
+    }catch(err){
+      C.sheets = null;
+      C.lastResult = null;
+      info.innerHTML = '<span style="color:#dc2626;">❌ ' + esc(err && err.message || String(err)) + '</span>';
+      previewBox.innerHTML = '';
+      resultBox.innerHTML = '';
+    }
+  }
+
+  /* ---- 预览渲染 ---- */
+  function renderPreview(){
+    resultBox.innerHTML = '';
+    if(!C.sheets){
+      previewBox.innerHTML = '';
+      return;
+    }
+    let data;
+    try{
+      data = analyzeSheet(C.sheets, C.sheetIdx, C.opts);
+    }catch(err){
+      previewBox.innerHTML = `
+        <section class="card">
+          <div class="card-head"><h3>数据预览</h3></div>
+          <div class="card-body">
+            <p style="color:#dc2626;">❌ ${esc(err && err.message || String(err))}</p>
+          </div>
+        </section>`;
+      return;
+    }
+
+    const s = data.stats;
+    const rows = data.items;
+    const LIMIT = 200;
+    const shown = rows.slice(0, LIMIT);
+
+    const actBadge = a => a === 'new'    ? '<span class="badge badge-green">新增</span>'
+                        : a === 'update' ? '<span class="badge badge-blue">覆盖</span>'
+                        : a === 'skip'   ? '<span class="badge badge-gray">跳过</span>'
+                        :                  '<span class="badge badge-red">错误</span>';
+
+    const sheetPicker = C.sheets.length > 1 ? `
+      <select id="sheetSel" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+        ${C.sheets.map((sh, i) => `<option value="${i}" ${i === C.sheetIdx ? 'selected' : ''}>${esc(sh.name)}</option>`).join('')}
+      </select>` : '';
+
+    previewBox.innerHTML = `
+      <div class="stat-grid">
+        ${statCard('📄', '表格数据行', s.total,  '#2563eb')}
+        ${statCard('✅', '将新增',     s.new_,   '#16a34a')}
+        ${statCard('🔁', '将覆盖',     s.update, '#0891b2')}
+        ${statCard('⚠️', '跳过 / 错误', s.skip + ' / ' + s.error, '#dc2626')}
+      </div>
+
+      <section class="card">
+        <div class="card-head">
+          <h3>数据预览（表头在第 ${data.headerRowNo} 行）</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${sheetPicker}
+            <button class="btn btn-success" id="runImportBtn" ${s.new_ + s.update === 0 ? 'disabled' : ''}>
+              开始导入（${s.new_ + s.update} 条）
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>行号</th><th>状态</th><th>机构</th><th>部门</th><th>姓名</th><th>账号</th>
+                  <th>密码</th><th>职位</th><th>职级</th><th>电话</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              ${shown.map(it => `
+                <tr>
+                  <td class="muted">${it.rowNo}</td>
+                  <td>${actBadge(it.act)}</td>
+                  <td>${esc(it.org || '—')}</td>
+                  <td>${esc(it.deptName || '—')}</td>
+                  <td><strong>${esc(it.name || '—')}</strong></td>
+                  <td>${esc(it.username || '—')}</td>
+                  <td class="muted">${it.password ? '••••••' : '（默认）'}</td>
+                  <td>${esc(it.title || '—')}</td>
+                  <td>${rankBadge(it.rank)}</td>
+                  <td>${esc(it.phone || '—')}</td>
+                  <td class="muted" style="white-space:normal;max-width:220px;">${esc(it.msg || '')}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-body" style="padding-top:0;">
+          <p class="muted" style="font-size:12.5px;">
+            ${rows.length > LIMIT ? '仅显示前 ' + LIMIT + ' 行，共 ' + rows.length + ' 行。' : ''}
+            部门不存在时会${C.opts.autoCreate ? '<b style="color:#16a34a;">自动创建</b>' : '报错'}；
+            已存在的账号按「${C.opts.dupPolicy === 'skip' ? '跳过' : (C.opts.dupPolicy === 'overwrite' ? '覆盖更新' : '视为错误')}」处理。
+          </p>
+        </div>
+      </section>`;
+
+    const sel = $('#sheetSel', previewBox);
+    if(sel) sel.onchange = e => { C.sheetIdx = Number(e.target.value); renderPreview(); };
+
+    const runBtn = $('#runImportBtn', previewBox);
+    if(runBtn) runBtn.onclick = () => {
+      readOpts();
+      const willDo = s.new_ + s.update;
+      confirmModal(
+        '确认导入 ' + willDo + ' 条人员数据吗？' +
+        (s.update ? '其中 ' + s.update + ' 条会覆盖已有账号的信息。' : '') +
+        (s.error ? '另有 ' + s.error + ' 条存在错误，将被忽略。' : ''),
+        () => {
+          const res = executeImport(data.items, C.opts);
+          C.lastResult = { res, total: s.total };
+          toast('导入完成：新增 ' + res.stats.inserted + ' 人，更新 ' + res.stats.updated +
+                ' 人' + (res.stats.failed ? '，失败 ' + res.stats.failed + ' 条' : ''));
+          renderResult();
+          refresh();
+        }, '确认导入');
+    };
+  }
+
+  /* ---- 结果渲染 ---- */
+  function renderResult(){
+    const R = C.lastResult;
+    if(!R){ resultBox.innerHTML = ''; return; }
+    const st = R.res.stats;
+    resultBox.innerHTML = `
+      <section class="card">
+        <div class="card-head">
+          <h3>导入结果</h3>
+          <div style="display:flex;gap:8px;">
+            ${R.res.failedRows.length ? '<button class="btn btn-sm btn-ghost" id="dlFailBtn">导出失败明细</button>' : ''}
+            <button class="btn btn-sm btn-ghost" id="closeResultBtn">关闭</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="stat-grid">
+            ${statCard('✅', '新增人员', st.inserted, '#16a34a')}
+            ${statCard('🔁', '更新人员', st.updated,  '#0891b2')}
+            ${statCard('➕', '新建部门', st.deptCreated, '#2563eb')}
+            ${statCard('⚠️', '失败',     st.failed,   '#dc2626')}
+          </div>
+          ${R.res.failedRows.length ? `
+            <p class="muted" style="margin:6px 0 8px;">以下 ${R.res.failedRows.length} 条未导入：</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>行号</th><th>姓名</th><th>账号</th><th>部门</th><th>原因</th></tr></thead>
+                <tbody>
+                  ${R.res.failedRows.map(it => `
+                    <tr>
+                      <td class="muted">${it.rowNo}</td>
+                      <td>${esc(it.name || '—')}</td>
+                      <td>${esc(it.username || '—')}</td>
+                      <td>${esc(it.deptName || '—')}</td>
+                      <td style="color:#dc2626;white-space:normal;">${esc(it.msg || '')}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : '<p style="color:#16a34a;margin-top:6px;">✅ 全部数据导入成功，无失败记录。</p>'}
+          ${(st.orgCreated || st.deptCreated) ? `<p class="muted" style="margin-top:10px;font-size:12.5px;">
+            本次自动创建：机构 ${st.orgCreated} 个、部门 ${st.deptCreated} 个。可到「组织架构」中补充负责人等信息。</p>` : ''}
+        </div>
+      </section>`;
+
+    const dl = $('#dlFailBtn', resultBox);
+    if(dl) dl.onclick = () => {
+      downloadText('导入失败明细-' + Date.now() + '.csv', toCSV(
+        ['行号', '机构', '部门', '姓名', '账号', '职位', '电话', '失败原因'],
+        R.res.failedRows.map(it => [it.rowNo, it.org, it.deptName, it.name, it.username, it.title, it.phone, it.msg])
+      ));
+      toast('失败明细已导出');
+    };
+    const cl = $('#closeResultBtn', resultBox);
+    if(cl) cl.onclick = () => { C.lastResult = null; resultBox.innerHTML = ''; };
+  }
+
+  /* ---- 模板 / 导出 ---- */
+  $('#tplBtn', el).onclick = () => {
+    const heads = ['机构', '部门', '姓名', '账号', '密码', '职级', '岗位', '电话', '状态'];
+    const sample = DB.departments.slice(0, 3).map((d, i) => [
+      orgName(d.orgId), d.name,
+      '示例姓名' + (i + 1), 'demo' + (i + 1), '123456',
+      '干事', '干事', '1380000000' + i, '启用'
+    ]);
+    downloadText('人员导入模板.csv', toCSV(heads, sample));
+    toast('模板已下载，可用 Excel / WPS 打开填写（建议另存为 xlsx）');
+  };
+  $('#expBtn', el).onclick = () => {
+    const heads = ['机构', '部门', '姓名', '账号', '密码', '职级', '岗位', '电话', '状态'];
+    const rows = DB.users.map(u => [
+      u.role === 'admin' ? '系统管理' : deptOrgName(u.departmentId),
+      u.role === 'admin' ? '管理员' : deptName(u.departmentId),
+      u.name, u.username, u.password,
+      u.role === 'admin' ? '' : u.rank,
+      u.title || '', u.phone || '', u.status === 1 ? '启用' : '禁用'
+    ]);
+    downloadText('当前人员名单-' + Date.now() + '.csv', toCSV(heads, rows));
+    toast('已导出 ' + DB.users.length + ' 条人员记录（含明文密码，请妥善保管）');
+  };
+
+  if(C.sheets){
+    const info = $('#fileInfo', el);
+    info.innerHTML = '<span style="color:#16a34a;">✅ 已解析：' + esc(C.fileName) + '（共 ' +
+      C.sheets.length + ' 个工作表，当前使用「' + esc(C.sheets[C.sheetIdx].name) + '」）</span>';
+  }
+  renderPreview();
+  renderResult();
+}
+
+/* ----------------------------------------------------------------
+ * 6. 全局事件绑定 & 启动
+ * ---------------------------------------------------------------- */
+function bindGlobal(){
+  /* 角色切换 */
+  $$('.role-tab').forEach(tab => {
+    tab.onclick = () => {
+      $$('.role-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      loginRole = tab.dataset.role;
+    };
+  });
+
+  /* 登录 */
+  $('#loginBtn').onclick = doLogin;
+  $('#loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+  $('#loginUser').addEventListener('keydown', e => { if(e.key === 'Enter') $('#loginPass').focus(); });
+
+  /* 退出 */
+  $('#logoutBtn').onclick = doLogout;
+
+  /* 登录页：显示当前存储模式 */
+  const tip = document.getElementById('loginStorageTip');
+  if (tip){
+    tip.textContent = storageMode === 'memory'
+      ? '⚠️ 当前为「内存模式」：浏览器不允许本地存储，关闭页面后数据将丢失。请定期使用「导出 JSON」备份。'
+      : '✅ 本地存储已启用：数据会保存在浏览器中。';
+    tip.style.color = storageMode === 'memory' ? '#dc2626' : '#16a34a';
+  }
+
+  /* 登录页：若当前系统中还没有任何部门人员账号，给出提示 */
+  const loginTipBox = document.querySelector('#loginPage .login-tip');
+  if (loginTipBox){
+    const old = loginTipBox.querySelector('.sys-hint');
+    if (old) old.remove();
+    const staffCount = DB.users.filter(u => u.role === 'staff').length;
+    if (staffCount === 0){
+      const hint = document.createElement('div');
+      hint.className = 'sys-hint';
+      hint.style.cssText = 'margin-top:8px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;text-align:left;';
+      hint.textContent = '提示：当前系统中暂无部门人员账号，请使用「辅导员 / 管理员」登录，在「人员管理」中创建部门人员账号后，部门人员方可登录。';
+      loginTipBox.appendChild(hint);
+    }
+  }
+
+  /* 登录页：一键清除全部浏览器数据，恢复初始空库 */
+  const resetAll = document.getElementById('resetAllBtn');
+  if (resetAll){
+    resetAll.onclick = () => {
+      if (!confirm('确定清除浏览器中的全部数据，并恢复为初始状态吗？\n（组织架构与 1 个管理员账号会保留，其余人员与业务数据将全部删除）')) return;
+      try { localStorage.clear(); } catch(_){}
+      /* 内存里的也一并清掉 */
+      ['ver','orgs','dept','users','tasks','notices','apps','logs','cur','read'].forEach(k => Store.remove(K[k]));
+      seedData();
+      loadAll();
+      currentUser = null;
+      Store.remove(K.cur);
+      alert('已重置为初始状态，请使用管理员账号登录。');
+      location.reload();
+    };
+  }
+
+  /* 移动端侧栏 */
+  $('#menuToggle').onclick = () => {
+    $('#sidebar').classList.toggle('open');
+    $('#overlay').classList.toggle('show');
+  };
+  $('#overlay').onclick = () => {
+    $('#sidebar').classList.remove('open');
+    $('#overlay').classList.remove('show');
+  };
+
+  /* 路由变化 */
+  window.addEventListener('hashchange', route);
+}
+
+function init(){
+  /* 首次访问初始化数据 —— 整个流程用 try-catch 兜底 */
+  try {
+    Store.available();
+    storageMode = Store.mode();
+    /* 无数据、或数据版本已变更（本次为「清空演示数据」），都重建为初始空库 */
+    const storedVer = Number(Store.get(K.ver, 0) || 0);
+    if(!loadKey(K.users, null) || storedVer !== DATA_VERSION){
+      seedData();
+    }
+    loadAll();
+    /* 旧数据平滑升级：确保系统内存在超级管理员（不删除任何业务数据） */
+    if(ensureSuperAdmin()) saveAll();
+    restoreSession();
+  } catch(err) {
+    console.error('[init 异常]', err);
+    /* 即使初始化失败，也保证用户能看到登录页 */
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('appPage').classList.add('hidden');
+    toast('初始化失败：' + (err && err.message || err), 'error');
+    /* 显示详细错误到登录页顶部 */
+    var lp = document.getElementById('loginPage');
+    if (lp){
+      var tip = lp.querySelector('.login-tip');
+      if (tip){
+        tip.innerHTML = '<b style="color:#dc2626;">⚠️ 数据加载失败，请尝试：</b><br>' +
+          '1) 刷新页面重试 &nbsp; 2) 使用「导出 JSON」备份数据<br>' +
+          '<span style="color:#6b7280;font-size:11px;">错误详情：' + esc(String(err && err.message || err)) + '</span>';
+      }
+    }
+  }
+  bindGlobal();
+  route();
+  /* 内存模式下提示用户 */
+  if (storageMode === 'memory'){
+    setTimeout(function(){
+      toast('当前浏览器禁用了本地存储，数据仅在本次会话保留。建议通过「导出 JSON」手动备份。', 'warn');
+    }, 600);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
